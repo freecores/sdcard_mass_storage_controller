@@ -1,0 +1,773 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+ld_info          0x00000000         0x000000f0
+vectors          0x00000100         0x00000c00
+flash            0x00000d00         0x00001600
+ram              0x00003000         0x00001000
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD BootReset.o
+LOAD main.o
+LOAD revision.o
+
+.ld_info        0x00000000       0xa8
+ revision.o(.data)
+ .data          0x00000000       0xa8 revision.o
+                0x00000000                _load_info_values
+
+.vectors        0x00000100      0x900
+ *(.vectors)
+ .vectors       0x00000100      0x900 BootReset.o
+                0x00000400                __exception_instruction_page_fault
+                0x00000800                __external_IRQ
+                0x00000200                __exception_bus_error
+                0x00000300                __exception_data_page_fault
+                0x00000600                __exception_unaligned_access
+                0x00000700                __exception_illegal_instruction
+                0x00000500                __exception_tick_timer
+
+.text           0x00000d00      0x2a0
+ *(.text)
+ .text          0x00000d00        0x0 BootReset.o
+ .text          0x00000d00      0x2a0 main.o
+                0x00000ee8                _external_exeption
+                0x00000d40                _SPI3_Config
+                0x00000d80                _SPI2_Send_Receive_Data
+                0x00000f00                _Start
+                0x00000e6c                _Write_External_SDRAM_1
+                0x00000de4                _SPI3_Send_Receive_Data
+                0x00000d00                _SPI2_Config
+                0x00000e48                _GPIO_Write
+ .text          0x00000fa0        0x0 revision.o
+
+.rodata
+ *(.rodata)
+
+.data           0x00003000        0x0
+ *(.data)
+ .data          0x00003000        0x0 BootReset.o
+ .data          0x00003000        0x0 main.o
+
+.bss            0x00003000        0x0
+ *(.bss)
+ .bss           0x00003000        0x0 BootReset.o
+ .bss           0x00003000        0x0 main.o
+ .bss           0x00003000        0x0 revision.o
+
+.stack          0x00003000      0x500
+                0x00003000                __STACK_TOP = .
+                0x00003500                . = (. + 0x500)
+ *fill*         0x00003000      0x500 00
+                0x00003500                __STACK_BOTTOM = .
+                0x00000d00                __CODE_START = ADDR (.text)
+                0x00000fa0                __CODE_END = (ADDR (.text) + SIZEOF (.text))
+                0x00003000                __DATA_START = ADDR (.bss)
+                0x00003000                __DATA_END = (ADDR (.bss) + SIZEOF (.bss))
+OUTPUT(boot.or32 elf32-or32)
+
+.stab           0x00000000      0x870
+ .stab          0x00000000      0x75c main.o
+ .stab          0x0000075c      0x114 revision.o
+
+.stabstr        0x00000000      0xb4b
+ .stabstr       0x00000000      0x6ae main.o
+ .stabstr       0x000006ae      0x49d revision.o
+
+.comment        0x00000000       0x24
+ .comment       0x00000000       0x12 main.o
+ .comment       0x00000012       0x12 revision.o
+00000000 t _reset
+00000100 T __exception_bus_error
+00000200 T __exception_data_page_fault
+00000300 T __exception_instruction_page_fault
+00000400 T __exception_tick_timer
+00000500 T __exception_unaligned_access
+00000600 T __exception_illegal_instruction
+00000700 T __external_IRQ
+00000724 t JUMP
+00000740 t save_state
+000007b8 t restore_state
+
+boot.or32:     file format elf32-or32
+boot.or32
+architecture: or32, flags 0x00000113:
+HAS_RELOC, EXEC_P, HAS_SYMS, D_PAGED
+start address 0x00000d00
+
+Program Header:
+    LOAD off    0x00002000 vaddr 0x00000000 paddr 0x00000000 align 2**13
+         filesz 0x000000a8 memsz 0x000000a8 flags rw-
+    LOAD off    0x00002100 vaddr 0x00000100 paddr 0x00000100 align 2**13
+         filesz 0x00000900 memsz 0x00000900 flags r-x
+    LOAD off    0x00002d00 vaddr 0x00000d00 paddr 0x00000d00 align 2**13
+         filesz 0x000002a0 memsz 0x000002a0 flags r-x
+    LOAD off    0x00003000 vaddr 0x00003000 paddr 0x00003000 align 2**13
+         filesz 0x00000000 memsz 0x00000500 flags rw-
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .ld_info      000000a8  00000000  00000000  00002000  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+  1 .vectors      00000900  00000100  00000100  00002100  2**8
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  2 .text         000002a0  00000d00  00000d00  00002d00  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  3 .stack        00000500  00003000  00003000  00003000  2**0
+                  ALLOC
+  4 .stab         00000870  00000000  00000000  00002fa0  2**2
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+  5 .stabstr      00000b4b  00000000  00000000  00003810  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .comment      00000024  00000000  00000000  0000435b  2**0
+                  CONTENTS, READONLY
+SYMBOL TABLE:
+00000d00 l    d  .text	00000000 .text
+00000100 l    d  .vectors	00000000 .vectors
+00000100 l       .vectors	00000000 _reset
+00003560 l       *ABS*	00000000 sp
+00000840 l       .vectors	00000000 save_state
+00000824 l       .vectors	00000000 JUMP
+000008b8 l       .vectors	00000000 restore_state
+00000000 l    df *ABS*	00000000 main.c
+00000d00 l    d  .text	00000000 .text
+00000000 l    d  .stab	00000000 .stab
+00000000 l    d  .stabstr	00000000 .stabstr
+00000000 l    d  .comment	00000000 .comment
+00000000 l    df *ABS*	00000000 revision.c
+00000000 l    d  .ld_info	00000000 .ld_info
+00003000 l    d  .stack	00000000 .stack
+00000fa0 g       *ABS*	00000000 __CODE_END
+00000400 g       .vectors	00000000 __exception_instruction_page_fault
+00000800 g       .vectors	00000000 __external_IRQ
+00000200 g       .vectors	00000000 __exception_bus_error
+00003000 g       .stack	00000000 __DATA_START
+00003000 g       .stack	00000000 __STACK_TOP
+00003500 g       .stack	00000000 __STACK_BOTTOM
+00000ee8 g     F .text	00000018 _external_exeption
+00000d40 g     F .text	00000040 _SPI3_Config
+00000d80 g     F .text	00000064 _SPI2_Send_Receive_Data
+00000300 g       .vectors	00000000 __exception_data_page_fault
+00000600 g       .vectors	00000000 __exception_unaligned_access
+00000000 g     O .ld_info	000000a8 _load_info_values
+00000700 g       .vectors	00000000 __exception_illegal_instruction
+00000500 g       .vectors	00000000 __exception_tick_timer
+00000f00 g     F .text	000000a0 _Start
+00003000 g       *ABS*	00000000 __DATA_END
+00000e6c g     F .text	0000007c _Write_External_SDRAM_1
+00000de4 g     F .text	00000064 _SPI3_Send_Receive_Data
+00000d00 g     F .text	00000040 _SPI2_Config
+00000d00 g       .text	00000000 __CODE_START
+00000e48 g     F .text	00000024 _GPIO_Write
+
+
+
+Disassembly of section .vectors:
+
+00000100 <_reset>:
+ 100:	18 00 00 00 	l.movhi r0,0x0
+ 104:	a8 00 00 00 	l.ori r0,r0,0x0
+ 108:	18 20 00 00 	l.movhi r1,0x0
+ 10c:	a8 21 35 60 	l.ori r1,r1,0x3560
+ 110:	e0 40 00 04 	l.or r2,r0,r0
+ 114:	e0 60 00 04 	l.or r3,r0,r0
+ 118:	e0 80 00 04 	l.or r4,r0,r0
+ 11c:	e0 a0 00 04 	l.or r5,r0,r0
+ 120:	e0 c0 00 04 	l.or r6,r0,r0
+ 124:	e0 e0 00 04 	l.or r7,r0,r0
+ 128:	e1 00 00 04 	l.or r8,r0,r0
+ 12c:	e1 20 00 04 	l.or r9,r0,r0
+ 130:	e1 40 00 04 	l.or r10,r0,r0
+ 134:	e1 60 00 04 	l.or r11,r0,r0
+ 138:	e1 80 00 04 	l.or r12,r0,r0
+ 13c:	e1 a0 00 04 	l.or r13,r0,r0
+ 140:	e1 c0 00 04 	l.or r14,r0,r0
+ 144:	e1 e0 00 04 	l.or r15,r0,r0
+ 148:	e2 00 00 04 	l.or r16,r0,r0
+ 14c:	e2 20 00 04 	l.or r17,r0,r0
+ 150:	e2 40 00 04 	l.or r18,r0,r0
+ 154:	e2 60 00 04 	l.or r19,r0,r0
+ 158:	e2 80 00 04 	l.or r20,r0,r0
+ 15c:	e2 a0 00 04 	l.or r21,r0,r0
+ 160:	e2 c0 00 04 	l.or r22,r0,r0
+ 164:	e2 e0 00 04 	l.or r23,r0,r0
+ 168:	e3 00 00 04 	l.or r24,r0,r0
+ 16c:	e3 20 00 04 	l.or r25,r0,r0
+ 170:	e3 40 00 04 	l.or r26,r0,r0
+ 174:	e3 60 00 04 	l.or r27,r0,r0
+ 178:	e3 80 00 04 	l.or r28,r0,r0
+ 17c:	e3 a0 00 04 	l.or r29,r0,r0
+ 180:	e3 c0 00 04 	l.or r30,r0,r0
+ 184:	e3 e0 00 04 	l.or r31,r0,r0
+ 188:	18 40 00 00 	l.movhi r2,0x0
+ 18c:	a8 42 0f 00 	l.ori r2,r2,0xf00
+ 190:	44 00 10 00 	l.jr r2
+ 194:	15 00 00 00 	l.nop 0x0
+	...
+
+00000200 <__exception_bus_error>:
+ 200:	00 00 00 00 	l.j 200 <__exception_bus_error>
+ 204:	15 00 00 00 	l.nop 0x0
+	...
+
+00000300 <__exception_data_page_fault>:
+ 300:	00 00 00 00 	l.j 300 <__exception_data_page_fault>
+ 304:	15 00 00 00 	l.nop 0x0
+	...
+
+00000400 <__exception_instruction_page_fault>:
+ 400:	00 00 00 00 	l.j 400 <__exception_instruction_page_fault>
+ 404:	15 00 00 00 	l.nop 0x0
+	...
+
+00000500 <__exception_tick_timer>:
+ 500:	00 00 00 00 	l.j 500 <__exception_tick_timer>
+ 504:	15 00 00 00 	l.nop 0x0
+	...
+
+00000600 <__exception_unaligned_access>:
+ 600:	00 00 00 00 	l.j 600 <__exception_unaligned_access>
+ 604:	15 00 00 00 	l.nop 0x0
+	...
+
+00000700 <__exception_illegal_instruction>:
+ 700:	00 00 00 00 	l.j 700 <__exception_illegal_instruction>
+ 704:	15 00 00 00 	l.nop 0x0
+	...
+
+00000800 <__external_IRQ>:
+ 800:	9c 21 ff 88 	l.addi r1,r1,0xffffff88
+ 804:	d4 01 48 1c 	l.sw 0x1c(r1),r9
+ 808:	04 00 00 0e 	l.jal 840 <save_state>
+ 80c:	15 00 00 00 	l.nop 0x0
+ 810:	b4 60 00 40 	l.mfspr r3,r0,0x40
+ 814:	a4 83 00 04 	l.andi r4,r3,0x4
+ 818:	bc 04 00 00 	l.sfeqi r4,0x0
+ 81c:	0c 00 00 02 	l.bnf 824 <JUMP>
+ 820:	15 00 00 00 	l.nop 0x0
+
+00000824 <JUMP>:
+ 824:	04 00 01 b1 	l.jal ee8 <_external_exeption>
+ 828:	15 00 00 00 	l.nop 0x0
+ 82c:	04 00 00 23 	l.jal 8b8 <restore_state>
+ 830:	15 00 00 00 	l.nop 0x0
+ 834:	85 21 00 1c 	l.lwz r9,0x1c(r1)
+ 838:	9c 21 00 78 	l.addi r1,r1,0x78
+ 83c:	24 00 00 00 	l.rfe 
+
+00000840 <save_state>:
+ 840:	d4 01 10 00 	l.sw 0x0(r1),r2
+ 844:	d4 01 18 04 	l.sw 0x4(r1),r3
+ 848:	d4 01 20 08 	l.sw 0x8(r1),r4
+ 84c:	d4 01 28 0c 	l.sw 0xc(r1),r5
+ 850:	d4 01 30 10 	l.sw 0x10(r1),r6
+ 854:	d4 01 38 14 	l.sw 0x14(r1),r7
+ 858:	d4 01 40 18 	l.sw 0x18(r1),r8
+ 85c:	d4 01 50 20 	l.sw 0x20(r1),r10
+ 860:	d4 01 58 24 	l.sw 0x24(r1),r11
+ 864:	d4 01 60 28 	l.sw 0x28(r1),r12
+ 868:	d4 01 68 2c 	l.sw 0x2c(r1),r13
+ 86c:	d4 01 70 30 	l.sw 0x30(r1),r14
+ 870:	d4 01 78 34 	l.sw 0x34(r1),r15
+ 874:	d4 01 80 38 	l.sw 0x38(r1),r16
+ 878:	d4 01 88 3c 	l.sw 0x3c(r1),r17
+ 87c:	d4 01 90 40 	l.sw 0x40(r1),r18
+ 880:	d4 01 98 44 	l.sw 0x44(r1),r19
+ 884:	d4 01 a0 48 	l.sw 0x48(r1),r20
+ 888:	d4 01 a8 4c 	l.sw 0x4c(r1),r21
+ 88c:	d4 01 b0 50 	l.sw 0x50(r1),r22
+ 890:	d4 01 b8 54 	l.sw 0x54(r1),r23
+ 894:	d4 01 c0 58 	l.sw 0x58(r1),r24
+ 898:	d4 01 c8 5c 	l.sw 0x5c(r1),r25
+ 89c:	d4 01 d0 60 	l.sw 0x60(r1),r26
+ 8a0:	d4 01 d8 64 	l.sw 0x64(r1),r27
+ 8a4:	d4 01 e0 68 	l.sw 0x68(r1),r28
+ 8a8:	d4 01 e8 6c 	l.sw 0x6c(r1),r29
+ 8ac:	d4 01 f0 70 	l.sw 0x70(r1),r30
+ 8b0:	44 00 48 00 	l.jr r9
+ 8b4:	15 00 00 00 	l.nop 0x0
+
+000008b8 <restore_state>:
+ 8b8:	84 41 00 00 	l.lwz r2,0x0(r1)
+ 8bc:	84 61 00 04 	l.lwz r3,0x4(r1)
+ 8c0:	84 81 00 08 	l.lwz r4,0x8(r1)
+ 8c4:	84 a1 00 0c 	l.lwz r5,0xc(r1)
+ 8c8:	84 c1 00 10 	l.lwz r6,0x10(r1)
+ 8cc:	84 e1 00 14 	l.lwz r7,0x14(r1)
+ 8d0:	85 01 00 18 	l.lwz r8,0x18(r1)
+ 8d4:	85 41 00 20 	l.lwz r10,0x20(r1)
+ 8d8:	85 61 00 24 	l.lwz r11,0x24(r1)
+ 8dc:	85 81 00 28 	l.lwz r12,0x28(r1)
+ 8e0:	85 a1 00 2c 	l.lwz r13,0x2c(r1)
+ 8e4:	85 c1 00 30 	l.lwz r14,0x30(r1)
+ 8e8:	85 e1 00 34 	l.lwz r15,0x34(r1)
+ 8ec:	86 01 00 38 	l.lwz r16,0x38(r1)
+ 8f0:	86 21 00 3c 	l.lwz r17,0x3c(r1)
+ 8f4:	86 41 00 40 	l.lwz r18,0x40(r1)
+ 8f8:	86 61 00 44 	l.lwz r19,0x44(r1)
+ 8fc:	86 81 00 48 	l.lwz r20,0x48(r1)
+ 900:	86 a1 00 4c 	l.lwz r21,0x4c(r1)
+ 904:	86 c1 00 50 	l.lwz r22,0x50(r1)
+ 908:	86 e1 00 54 	l.lwz r23,0x54(r1)
+ 90c:	87 01 00 58 	l.lwz r24,0x58(r1)
+ 910:	87 21 00 5c 	l.lwz r25,0x5c(r1)
+ 914:	87 41 00 60 	l.lwz r26,0x60(r1)
+ 918:	87 61 00 64 	l.lwz r27,0x64(r1)
+ 91c:	87 81 00 68 	l.lwz r28,0x68(r1)
+ 920:	87 a1 00 6c 	l.lwz r29,0x6c(r1)
+ 924:	87 c1 00 70 	l.lwz r30,0x70(r1)
+ 928:	44 00 48 00 	l.jr r9
+ 92c:	15 00 00 00 	l.nop 0x0
+	...
+
+Disassembly of section .text:
+
+00000d00 <_SPI2_Config>:
+// Globals            : None
+// Side Effects       : 
+// Configuration Data : spi.h 
+
+void SPI2_Config()
+{   
+ d00:	9c 21 ff fc 	l.addi r1,r1,0xfffffffc
+ d04:	d4 01 10 00 	l.sw 0x0(r1),r2
+ d08:	9c 41 00 04 	l.addi r2,r1,0x4
+    uint32 ctrl_word; 
+    REG32(SPI2_DIVIDER)  =  SPI2_DIV_BIT;   // Set SPI clock divider
+ d0c:	18 80 b1 00 	l.movhi r4,0xb100
+ d10:	9c 60 00 03 	l.addi r3,r0,0x3
+ d14:	a8 a4 00 14 	l.ori r5,r4,0x14
+                 | CTRL_ASS     // When set will generate a slave select automatically
+                 | CTRL_CHAR_LEN(SPI2_REG_LEN)  // Number of bits to transfer
+                 | CTRL_Rx_NEG      // Master input slave output signal will change
+                                    // on negative SCLK.   
+                );
+    REG32(SPI2_CTRL)   = ctrl_word; 
+ d18:	a8 c4 00 10 	l.ori r6,r4,0x10
+// Configuration Data : spi.h 
+
+void SPI2_Config()
+{   
+    uint32 ctrl_word; 
+    REG32(SPI2_DIVIDER)  =  SPI2_DIV_BIT;   // Set SPI clock divider
+ d1c:	d4 05 18 00 	l.sw 0x0(r5),r3
+                 | CTRL_ASS     // When set will generate a slave select automatically
+                 | CTRL_CHAR_LEN(SPI2_REG_LEN)  // Number of bits to transfer
+                 | CTRL_Rx_NEG      // Master input slave output signal will change
+                                    // on negative SCLK.   
+                );
+    REG32(SPI2_CTRL)   = ctrl_word; 
+ d20:	9c 60 22 10 	l.addi r3,r0,0x2210
+    REG32(SPI2_SS)     = 0x1;   // Slave select line 1 set. If the ASS bit is set
+ d24:	a8 84 00 18 	l.ori r4,r4,0x18
+                 | CTRL_ASS     // When set will generate a slave select automatically
+                 | CTRL_CHAR_LEN(SPI2_REG_LEN)  // Number of bits to transfer
+                 | CTRL_Rx_NEG      // Master input slave output signal will change
+                                    // on negative SCLK.   
+                );
+    REG32(SPI2_CTRL)   = ctrl_word; 
+ d28:	d4 06 18 00 	l.sw 0x0(r6),r3
+    REG32(SPI2_SS)     = 0x1;   // Slave select line 1 set. If the ASS bit is set
+ d2c:	9c 60 00 01 	l.addi r3,r0,0x1
+ d30:	d4 04 18 00 	l.sw 0x0(r4),r3
+ d34:	84 41 00 00 	l.lwz r2,0x0(r1)
+ d38:	44 00 48 00 	l.jr r9
+ d3c:	9c 21 00 04 	l.addi r1,r1,0x4
+
+00000d40 <_SPI3_Config>:
+// Globals            : None
+// Side Effects       :
+// Configuration Data : spi.h 
+
+void SPI3_Config()
+{   
+ d40:	9c 21 ff fc 	l.addi r1,r1,0xfffffffc
+ d44:	d4 01 10 00 	l.sw 0x0(r1),r2
+ d48:	9c 41 00 04 	l.addi r2,r1,0x4
+    uint32 ctrl_word;
+ 
+    REG32(SPI3_DIVIDER)  =  SPI3_DIV_BIT; // Set SPI clock divider
+ d4c:	18 80 b2 00 	l.movhi r4,0xb200
+ d50:	9c 60 00 04 	l.addi r3,r0,0x4
+ d54:	a8 a4 00 14 	l.ori r5,r4,0x14
+                 | CTRL_CHAR_LEN(SPI3_REG_LEN)  // Number of bits to transfer
+                 | CTRL_Tx_NEG      // Master output slave input signal will change
+                                    // on negative SCLK.   
+                );
+
+    REG32(SPI3_CTRL)   = ctrl_word; 
+ d58:	a8 c4 00 10 	l.ori r6,r4,0x10
+
+void SPI3_Config()
+{   
+    uint32 ctrl_word;
+ 
+    REG32(SPI3_DIVIDER)  =  SPI3_DIV_BIT; // Set SPI clock divider
+ d5c:	d4 05 18 00 	l.sw 0x0(r5),r3
+                 | CTRL_CHAR_LEN(SPI3_REG_LEN)  // Number of bits to transfer
+                 | CTRL_Tx_NEG      // Master output slave input signal will change
+                                    // on negative SCLK.   
+                );
+
+    REG32(SPI3_CTRL)   = ctrl_word; 
+ d60:	9c 60 24 10 	l.addi r3,r0,0x2410
+    REG32(SPI3_SS)     = 0x1;   // Slave select line 1 set. If the ASS bit is set
+ d64:	a8 84 00 18 	l.ori r4,r4,0x18
+                 | CTRL_CHAR_LEN(SPI3_REG_LEN)  // Number of bits to transfer
+                 | CTRL_Tx_NEG      // Master output slave input signal will change
+                                    // on negative SCLK.   
+                );
+
+    REG32(SPI3_CTRL)   = ctrl_word; 
+ d68:	d4 06 18 00 	l.sw 0x0(r6),r3
+    REG32(SPI3_SS)     = 0x1;   // Slave select line 1 set. If the ASS bit is set
+ d6c:	9c 60 00 01 	l.addi r3,r0,0x1
+ d70:	d4 04 18 00 	l.sw 0x0(r4),r3
+ d74:	84 41 00 00 	l.lwz r2,0x0(r1)
+ d78:	44 00 48 00 	l.jr r9
+ d7c:	9c 21 00 04 	l.addi r1,r1,0x4
+
+00000d80 <_SPI2_Send_Receive_Data>:
+// Globals            : NONE
+// Configuration Data : spi.h 
+// Calling            : receive_data  = (uint16)SPI2_Send_Receive_Data(send_data);
+
+uint32 SPI2_Send_Receive_Data(uint32 transmit_data)
+{
+ d80:	9c 21 ff fc 	l.addi r1,r1,0xfffffffc
+ d84:	d4 01 10 00 	l.sw 0x0(r1),r2
+ d88:	9c 41 00 04 	l.addi r2,r1,0x4
+   uint32 ctrl_word;
+
+   REG unsigned long no_response = 0;
+   REG32(SPI2_TX0)   = transmit_data;   // Put your data in tx reg
+ d8c:	18 a0 b1 00 	l.movhi r5,0xb100
+   REG32(SPI2_CTRL)  |= SPI_CTRL_GO;    // Start the transfer |= or
+ d90:	9c 80 00 00 	l.addi r4,r0,0x0
+uint32 SPI2_Send_Receive_Data(uint32 transmit_data)
+{
+   uint32 ctrl_word;
+
+   REG unsigned long no_response = 0;
+   REG32(SPI2_TX0)   = transmit_data;   // Put your data in tx reg
+ d94:	d4 05 18 00 	l.sw 0x0(r5),r3
+   REG32(SPI2_CTRL)  |= SPI_CTRL_GO;    // Start the transfer |= or
+ d98:	a8 c5 00 10 	l.ori r6,r5,0x10
+ d9c:	84 66 00 00 	l.lwz r3,0x0(r6)
+   while(REG32(SPI2_CTRL) & SPI_CTRL_BSY) // Do the transmit
+ da0:	a8 a6 00 00 	l.ori r5,r6,0x0
+{
+   uint32 ctrl_word;
+
+   REG unsigned long no_response = 0;
+   REG32(SPI2_TX0)   = transmit_data;   // Put your data in tx reg
+   REG32(SPI2_CTRL)  |= SPI_CTRL_GO;    // Start the transfer |= or
+ da4:	a8 63 01 00 	l.ori r3,r3,0x100
+ da8:	d4 06 18 00 	l.sw 0x0(r6),r3
+ dac:	00 00 00 04 	l.j dbc <_SPI2_Send_Receive_Data+0x3c>
+ db0:	15 00 00 00 	l.nop 0x0
+   while(REG32(SPI2_CTRL) & SPI_CTRL_BSY) // Do the transmit
+   {
+     if(no_response++ >= MAX_SPI_WAIT) {
+ db4:	10 00 00 07 	l.bf dd0 <_SPI2_Send_Receive_Data+0x50>
+ db8:	9c 84 00 01 	l.addi r4,r4,0x1
+   uint32 ctrl_word;
+
+   REG unsigned long no_response = 0;
+   REG32(SPI2_TX0)   = transmit_data;   // Put your data in tx reg
+   REG32(SPI2_CTRL)  |= SPI_CTRL_GO;    // Start the transfer |= or
+   while(REG32(SPI2_CTRL) & SPI_CTRL_BSY) // Do the transmit
+ dbc:	84 65 00 00 	l.lwz r3,0x0(r5)
+ dc0:	a4 63 01 00 	l.andi r3,r3,0x100
+ dc4:	bc 23 00 00 	l.sfnei r3,0x0
+ dc8:	13 ff ff fb 	l.bf db4 <_SPI2_Send_Receive_Data+0x34>
+ dcc:	bc 04 27 10 	l.sfeqi r4,0x2710
+     if(no_response++ >= MAX_SPI_WAIT) {
+     break; }  
+   }
+   return(REG32(SPI2_DR0));     // Return receive reg
+
+} 
+ dd0:	19 60 b1 00 	l.movhi r11,0xb100
+ dd4:	85 6b 00 00 	l.lwz r11,0x0(r11)
+ dd8:	84 41 00 00 	l.lwz r2,0x0(r1)
+ ddc:	44 00 48 00 	l.jr r9
+ de0:	9c 21 00 04 	l.addi r1,r1,0x4
+
+00000de4 <_SPI3_Send_Receive_Data>:
+// Side Effects         :
+// Configuration Data   : spi.h 
+// Calling              : receive_data  = (uint16)SPI3_Send_Receive_Data(send_data);
+
+uint32 SPI3_Send_Receive_Data(uint32 transmitt_data)
+{
+ de4:	9c 21 ff fc 	l.addi r1,r1,0xfffffffc
+ de8:	d4 01 10 00 	l.sw 0x0(r1),r2
+ dec:	9c 41 00 04 	l.addi r2,r1,0x4
+   uint32 ctrl_word;
+
+   REG unsigned long no_response = 0;
+   REG32(SPI3_TX0)   = transmitt_data;    // Put your data in tx reg
+ df0:	18 a0 b2 00 	l.movhi r5,0xb200
+   REG32(SPI3_CTRL)  |= SPI_CTRL_GO;      //Start the transfer |= or
+ df4:	9c 80 00 00 	l.addi r4,r0,0x0
+uint32 SPI3_Send_Receive_Data(uint32 transmitt_data)
+{
+   uint32 ctrl_word;
+
+   REG unsigned long no_response = 0;
+   REG32(SPI3_TX0)   = transmitt_data;    // Put your data in tx reg
+ df8:	d4 05 18 00 	l.sw 0x0(r5),r3
+   REG32(SPI3_CTRL)  |= SPI_CTRL_GO;      //Start the transfer |= or
+ dfc:	a8 c5 00 10 	l.ori r6,r5,0x10
+ e00:	84 66 00 00 	l.lwz r3,0x0(r6)
+   while(REG32(SPI3_CTRL) & SPI_CTRL_BSY) // Do the transmit
+ e04:	a8 a6 00 00 	l.ori r5,r6,0x0
+{
+   uint32 ctrl_word;
+
+   REG unsigned long no_response = 0;
+   REG32(SPI3_TX0)   = transmitt_data;    // Put your data in tx reg
+   REG32(SPI3_CTRL)  |= SPI_CTRL_GO;      //Start the transfer |= or
+ e08:	a8 63 01 00 	l.ori r3,r3,0x100
+ e0c:	d4 06 18 00 	l.sw 0x0(r6),r3
+ e10:	00 00 00 04 	l.j e20 <_SPI3_Send_Receive_Data+0x3c>
+ e14:	15 00 00 00 	l.nop 0x0
+   while(REG32(SPI3_CTRL) & SPI_CTRL_BSY) // Do the transmit
+   {
+     if(no_response++ >= MAX_SPI_WAIT) {
+ e18:	10 00 00 07 	l.bf e34 <_SPI3_Send_Receive_Data+0x50>
+ e1c:	9c 84 00 01 	l.addi r4,r4,0x1
+   uint32 ctrl_word;
+
+   REG unsigned long no_response = 0;
+   REG32(SPI3_TX0)   = transmitt_data;    // Put your data in tx reg
+   REG32(SPI3_CTRL)  |= SPI_CTRL_GO;      //Start the transfer |= or
+   while(REG32(SPI3_CTRL) & SPI_CTRL_BSY) // Do the transmit
+ e20:	84 65 00 00 	l.lwz r3,0x0(r5)
+ e24:	a4 63 01 00 	l.andi r3,r3,0x100
+ e28:	bc 23 00 00 	l.sfnei r3,0x0
+ e2c:	13 ff ff fb 	l.bf e18 <_SPI3_Send_Receive_Data+0x34>
+ e30:	bc 04 27 10 	l.sfeqi r4,0x2710
+     break; }  
+   }
+
+   return(REG32(SPI3_DR0));     // Return receive reg
+
+ } 
+ e34:	19 60 b2 00 	l.movhi r11,0xb200
+ e38:	85 6b 00 00 	l.lwz r11,0x0(r11)
+ e3c:	84 41 00 00 	l.lwz r2,0x0(r1)
+ e40:	44 00 48 00 	l.jr r9
+ e44:	9c 21 00 04 	l.addi r1,r1,0x4
+
+00000e48 <_GPIO_Write>:
+/******************************************************************************/
+
+// Write to the GPIO (32 bits)
+
+void GPIO_Write(uint32 GPIO_data)
+{   
+ e48:	9c 21 ff fc 	l.addi r1,r1,0xfffffffc
+ e4c:	d4 01 10 00 	l.sw 0x0(r1),r2
+ e50:	9c 41 00 04 	l.addi r2,r1,0x4
+   REG32(GPIO_BASE + RGPIO_OUT) = GPIO_data;
+ e54:	18 80 9a 00 	l.movhi r4,0x9a00
+ e58:	a8 84 00 04 	l.ori r4,r4,0x4
+ e5c:	d4 04 18 00 	l.sw 0x0(r4),r3
+ e60:	84 41 00 00 	l.lwz r2,0x0(r1)
+ e64:	44 00 48 00 	l.jr r9
+ e68:	9c 21 00 04 	l.addi r1,r1,0x4
+
+00000e6c <_Write_External_SDRAM_1>:
+/*                        W R I T E  T O EXTERNAL SDRAM 1                     */
+/******************************************************************************/
+
+// Write to External SDRAM
+void Write_External_SDRAM_1(void)
+{   
+ e6c:	9c 21 ff f8 	l.addi r1,r1,0xfffffff8
+ e70:	d4 01 10 04 	l.sw 0x4(r1),r2
+ e74:	9c 41 00 08 	l.addi r2,r1,0x8
+ e78:	d4 01 48 00 	l.sw 0x0(r1),r9
+   
+   range      = 0x100;       //0x100;
+   adr_offset = 0x00010000;  // External memory offset
+  
+   for (i=0x0; i < range; i=i+4) {
+      REG32(adr_offset + i)   = (adr_offset + i);
+ e7c:	18 60 00 01 	l.movhi r3,0x1
+ e80:	d4 03 18 00 	l.sw 0x0(r3),r3
+ e84:	a8 63 00 04 	l.ori r3,r3,0x4
+   error_report_offset = 0x2000;
+   
+   range      = 0x100;       //0x100;
+   adr_offset = 0x00010000;  // External memory offset
+  
+   for (i=0x0; i < range; i=i+4) {
+ e88:	18 80 00 01 	l.movhi r4,0x1
+      REG32(adr_offset + i)   = (adr_offset + i);
+ e8c:	d4 03 18 00 	l.sw 0x0(r3),r3
+   error_report_offset = 0x2000;
+   
+   range      = 0x100;       //0x100;
+   adr_offset = 0x00010000;  // External memory offset
+  
+   for (i=0x0; i < range; i=i+4) {
+ e90:	a8 84 01 00 	l.ori r4,r4,0x100
+      REG32(adr_offset + i)   = (adr_offset + i);
+ e94:	9c 63 00 04 	l.addi r3,r3,0x4
+   error_report_offset = 0x2000;
+   
+   range      = 0x100;       //0x100;
+   adr_offset = 0x00010000;  // External memory offset
+  
+   for (i=0x0; i < range; i=i+4) {
+ e98:	e4 23 20 00 	l.sfne r3,r4
+ e9c:	13 ff ff fb 	l.bf e88 <_Write_External_SDRAM_1+0x1c>
+ ea0:	18 80 00 01 	l.movhi r4,0x1
+      REG32(adr_offset + i)   = (adr_offset + i);
+   }
+
+   for (i=0x0; i < range; i=i+4) {
+     read = REG32(adr_offset + i);
+ ea4:	84 64 00 00 	l.lwz r3,0x0(r4)
+     if (read != (adr_offset + i)) {
+ ea8:	e4 03 20 00 	l.sfeq r3,r4
+ eac:	10 00 00 06 	l.bf ec4 <_Write_External_SDRAM_1+0x58>
+ eb0:	9c 84 00 04 	l.addi r4,r4,0x4
+       GPIO_Write(0x55);       
+ eb4:	07 ff ff e5 	l.jal e48 <_GPIO_Write>
+ eb8:	9c 60 00 55 	l.addi r3,r0,0x55
+ ebc:	00 00 00 00 	l.j ebc <_Write_External_SDRAM_1+0x50>
+ ec0:	15 00 00 00 	l.nop 0x0
+  
+   for (i=0x0; i < range; i=i+4) {
+      REG32(adr_offset + i)   = (adr_offset + i);
+   }
+
+   for (i=0x0; i < range; i=i+4) {
+ ec4:	18 60 00 01 	l.movhi r3,0x1
+ ec8:	a8 63 01 00 	l.ori r3,r3,0x100
+ ecc:	e4 24 18 00 	l.sfne r4,r3
+ ed0:	13 ff ff f5 	l.bf ea4 <_Write_External_SDRAM_1+0x38>
+ ed4:	15 00 00 00 	l.nop 0x0
+ ed8:	85 21 00 00 	l.lwz r9,0x0(r1)
+ edc:	84 41 00 04 	l.lwz r2,0x4(r1)
+ ee0:	44 00 48 00 	l.jr r9
+ ee4:	9c 21 00 08 	l.addi r1,r1,0x8
+
+00000ee8 <_external_exeption>:
+/******************************************************************************/
+/*                  E X T E R N A L   E X E P T I O N S                       */
+/******************************************************************************/
+
+void external_exeption()
+{      
+ ee8:	9c 21 ff fc 	l.addi r1,r1,0xfffffffc
+ eec:	d4 01 10 00 	l.sw 0x0(r1),r2
+ ef0:	9c 41 00 04 	l.addi r2,r1,0x4
+ ef4:	84 41 00 00 	l.lwz r2,0x0(r1)
+ ef8:	44 00 48 00 	l.jr r9
+ efc:	9c 21 00 04 	l.addi r1,r1,0x4
+
+00000f00 <_Start>:
+/*                       M A I N   P R O G R A M                              */
+/*                                                                            */
+/******************************************************************************/
+
+void Start()
+{
+ f00:	9c 21 ff f8 	l.addi r1,r1,0xfffffff8
+ f04:	d4 01 10 04 	l.sw 0x4(r1),r2
+ f08:	9c 41 00 08 	l.addi r2,r1,0x8
+ f0c:	d4 01 48 00 	l.sw 0x0(r1),r9
+  uint32 i;
+
+  // Configure GPIO
+  REG32(GPIO_BASE + RGPIO_OE)   = 0xff;  // bit0-7 = outputs, bit8-31 = inputs
+ f10:	18 60 9a 00 	l.movhi r3,0x9a00
+ f14:	9c 80 00 ff 	l.addi r4,r0,0xff
+ f18:	a8 a3 00 08 	l.ori r5,r3,0x8
+  REG32(GPIO_BASE + RGPIO_INTE) = 0x0;   // Disable interrupts from GPIO
+ f1c:	a8 c3 00 0c 	l.ori r6,r3,0xc
+void Start()
+{
+  uint32 i;
+
+  // Configure GPIO
+  REG32(GPIO_BASE + RGPIO_OE)   = 0xff;  // bit0-7 = outputs, bit8-31 = inputs
+ f20:	d4 05 20 00 	l.sw 0x0(r5),r4
+  REG32(GPIO_BASE + RGPIO_INTE) = 0x0;   // Disable interrupts from GPIO
+ f24:	9c 80 00 00 	l.addi r4,r0,0x0
+
+  GPIO_Write(0x1);
+ f28:	9c 60 00 01 	l.addi r3,r0,0x1
+{
+  uint32 i;
+
+  // Configure GPIO
+  REG32(GPIO_BASE + RGPIO_OE)   = 0xff;  // bit0-7 = outputs, bit8-31 = inputs
+  REG32(GPIO_BASE + RGPIO_INTE) = 0x0;   // Disable interrupts from GPIO
+ f2c:	d4 06 20 00 	l.sw 0x0(r6),r4
+
+  GPIO_Write(0x1);
+ f30:	07 ff ff c6 	l.jal e48 <_GPIO_Write>
+ f34:	15 00 00 00 	l.nop 0x0
+
+  // Setup SPI 2 
+  SPI2_Config();
+ f38:	07 ff ff 72 	l.jal d00 <_SPI2_Config>
+ f3c:	15 00 00 00 	l.nop 0x0
+
+  GPIO_Write(0x2);
+ f40:	07 ff ff c2 	l.jal e48 <_GPIO_Write>
+ f44:	9c 60 00 02 	l.addi r3,r0,0x2
+  
+  // Setup SPI 3 
+  SPI3_Config();
+ f48:	07 ff ff 7e 	l.jal d40 <_SPI3_Config>
+ f4c:	15 00 00 00 	l.nop 0x0
+  
+  GPIO_Write(0x3);
+ f50:	07 ff ff be 	l.jal e48 <_GPIO_Write>
+ f54:	9c 60 00 03 	l.addi r3,r0,0x3
+
+  // Send 0x22 on SPI 2
+  SPI2_Send_Receive_Data(0x22);
+ f58:	07 ff ff 8a 	l.jal d80 <_SPI2_Send_Receive_Data>
+ f5c:	9c 60 00 22 	l.addi r3,r0,0x22
+  
+  GPIO_Write(0x4);
+ f60:	07 ff ff ba 	l.jal e48 <_GPIO_Write>
+ f64:	9c 60 00 04 	l.addi r3,r0,0x4
+  
+  // Send 0x33 on SPI 3
+  SPI3_Send_Receive_Data(0x33);
+ f68:	07 ff ff 9f 	l.jal de4 <_SPI3_Send_Receive_Data>
+ f6c:	9c 60 00 33 	l.addi r3,r0,0x33
+
+  GPIO_Write(0x5);
+ f70:	07 ff ff b6 	l.jal e48 <_GPIO_Write>
+ f74:	9c 60 00 05 	l.addi r3,r0,0x5
+  
+  // Tests a few external SDRAM addresses
+  Write_External_SDRAM_1();
+ f78:	07 ff ff bd 	l.jal e6c <_Write_External_SDRAM_1>
+ f7c:	15 00 00 00 	l.nop 0x0
+
+  
+  while(TRUE) {
+
+    GPIO_Write(0xFF);  // Test finished
+ f80:	07 ff ff b2 	l.jal e48 <_GPIO_Write>
+ f84:	9c 60 00 ff 	l.addi r3,r0,0xff
+ f88:	03 ff ff fe 	l.j f80 <_Start+0x80>
+ f8c:	15 00 00 00 	l.nop 0x0
+ f90:	85 21 00 00 	l.lwz r9,0x0(r1)
+ f94:	84 41 00 04 	l.lwz r2,0x4(r1)
+ f98:	44 00 48 00 	l.jr r9
+ f9c:	9c 21 00 08 	l.addi r1,r1,0x8
