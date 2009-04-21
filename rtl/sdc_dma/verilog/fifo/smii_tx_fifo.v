@@ -3,10 +3,10 @@
 
 module sd_tx_fifo
   (
-   input [4-1:0] d,
+   input [32-1:0] d,
    input wr,
    input wclk,
-   output [4-1:0] q,
+   output [32-1:0] q,
    input rd,
    output full,
    output empty,
@@ -15,10 +15,10 @@ module sd_tx_fifo
    input rst
    );
    
-   reg [4-1:0] ram [0:`FIFO_TX_MEM_DEPTH-1];
+   reg [32-1:0] ram [0:`FIFO_TX_MEM_DEPTH-1];
    reg [`FIFO_TX_MEM_ADR_SIZE-1:0] adr_i, adr_o;
    wire ram_we;
-   wire [4-1:0] ram_din;
+   wire [32-1:0] ram_din;
     
 
        
@@ -67,6 +67,6 @@ module sd_tx_fifo
    assign empty = (adr_i == adr_o) ;
    
    assign mem_empt = ( adr_i-adr_o);
-   assign q = ram[adr_o[5:0]];
+   assign q = ram[adr_o[`FIFO_TX_MEM_ADR_SIZE-2:0]];
 endmodule
 

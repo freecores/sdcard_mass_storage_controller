@@ -1,6 +1,5 @@
 `include "SD_defines.v"
 
-
 module sd_rx_fifo
   (
    input [4-1:0] d,
@@ -56,24 +55,22 @@ module sd_rx_fifo
 	    tmp[4*8-1:4*7] <= d;	 
 	 `endif 
 	 `ifdef BIG_ENDIAN
-	  	if (wr & we[0])
-	     tmp[4*2-1:4*1] <= d; 
+	  if (wr & we[0])
+	   tmp[4*1-1:4*0] <= d;	 
 	  if (wr & we[1])
-	     tmp[4*1-1:4*0] <= d;	 
-	  
+	    tmp[4*2-1:4*1] <= d;   
 	  if (wr & we[2])
-	    tmp[4*4-1:4*3] <= d;	  
+	    tmp[4*3-1:4*2] <= d;   
 	  if (wr & we[3])
-	    tmp[4*3-1:4*2] <= d;	
-	     
+	   tmp[4*4-1:4*3] <= d;	     
 	  if (wr & we[4])
-	      tmp[4*6-1:4*5] <= d;	 
+	   tmp[4*5-1:4*4] <= d; 
 	  if (wr & we[5])
-	     tmp[4*5-1:4*4] <= d;	  
+	   tmp[4*6-1:4*5] <= d;	 
 	  if (wr & we[6]) 
-	     tmp[4*8-1:4*7] <= d;	  
+	   tmp[4*7-1:4*6] <= d;	  	  
 	  if (wr & we[7]) begin
-	      tmp[4*7-1:4*6] <= d;	 
+	   tmp[4*8-1:4*7] <= d;
 	       ft<=1; 
      end
       `endif 
