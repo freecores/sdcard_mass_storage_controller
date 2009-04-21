@@ -4,7 +4,7 @@
 
 
 
-`include "SD_defines.v"
+`include "sd_defines.v"
 `define BUFFER_OFFSET 2
 
 module sd_data_phy(
