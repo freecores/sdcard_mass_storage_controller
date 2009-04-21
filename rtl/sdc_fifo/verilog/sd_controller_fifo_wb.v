@@ -68,8 +68,8 @@ reg [7:0] command_timeout_reg;
   assign sd_clk_i = wb_clk_i;
 `endif
 
-`ifdef SD_CLK_SEP
-  //assign sd_clk_i = sd_clk_i_pad;
+`ifdef SD_CLK_EXT
+  assign sd_clk_i = sd_clk_i_pad;
 `endif
 assign sd_clk_o=sd_clk_i;
 
