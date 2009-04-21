@@ -33,6 +33,7 @@ module SD_DATA_MASTER (
   output reg start_rx_fifo,
   output reg [31:0] sys_adr,
   input tx_empt,
+  input tx_full,
   input rx_full,
   //SD-DATA_Host
   input busy_n     ,
@@ -49,10 +50,10 @@ module SD_DATA_MASTER (
 `define BD_EMPTY (`BD_SIZE  /4) 
 `ifdef RAM_MEM_WIDTH_32
       `define READ_CYCLE 2
-       reg bd_cnt  ;
+       reg [1:0]bd_cnt  ;
 `else `ifdef  RAM_MEM_WIDTH_16
       `define READ_CYCLE 4
-       reg [1:0] bd_cnt;
+       reg [2:0] bd_cnt;
    `endif
 `endif 
 
@@ -88,7 +89,7 @@ reg trans_done;
 reg trans_failed;
 
 
-always @ (state or free_tx_bd or free_rx_bd or bd_cnt or send_done or rec_done or rec_failed or trans_done or trans_failed)
+always @ (state or resend_try_cnt or tx_full or free_tx_bd or free_rx_bd or bd_cnt or send_done or rec_done or rec_failed or trans_done or trans_failed)
 begin : FSM_COMBO
  next_state  = 0;   
 case(state)  
@@ -105,7 +106,7 @@ case(state)
    end
   end
   GET_TX_BD: begin
-    if (bd_cnt>= (`READ_CYCLE-1))begin
+    if ( ( bd_cnt> `READ_CYCLE-1) && (tx_full==1) )begin
      next_state = SEND_CMD;
     end   
     else begin
@@ -280,28 +281,55 @@ begin
      GET_TX_BD:  begin             
         //0,1,2,3...
       re_s_tx <= 1;
+      if ( bd_cnt == `READ_CYCLE)
+        re_s_tx <= 0;
+        
+       `ifdef  RAM_MEM_WIDTH_32
+      if (ack_i_s_tx) begin
+        
+        if( bd_cnt == 2'b0) begin
+           sys_adr  <= dat_in_tx;
+           bd_cnt <= bd_cnt+1;   
+      end           
+        else if ( bd_cnt == 2'b1) begin  
+           cmd_arg  <= dat_in_tx; 
+        
+          re_s_tx <= 0; 
+        end
+       
+         
+     
+      end
+       `endif
+      
       `ifdef  RAM_MEM_WIDTH_16
       if (ack_i_s_tx) begin
         
-        if( bd_cnt == 2'b00) begin
-           sys_adr [15:0] <= dat_in_tx; end
-        else if ( bd_cnt == 2'b01)  begin
-           sys_adr [31:16] <= dat_in_tx; end
+        if( bd_cnt == 0) begin
+           sys_adr [15:0] <= dat_in_tx; 
+           bd_cnt <= bd_cnt+1;   end
+        else if ( bd_cnt == 1)  begin
+           sys_adr [31:16] <= dat_in_tx;
+           bd_cnt <= bd_cnt+1;    end
         else if ( bd_cnt == 2) begin
           cmd_arg [15:0] <= dat_in_tx;
-          re_s_tx <= 0; end
+          re_s_tx <= 0;
+          bd_cnt <= bd_cnt+1;    end
         else if ( bd_cnt == 3) begin
            cmd_arg [31:16] <= dat_in_tx;
            re_s_tx <= 0;
+           bd_cnt <= bd_cnt+1;
             end
-         bd_cnt <= bd_cnt+1;   
+       
+           
      
       end
        `endif
      //Add Later Save last block addres for comparison with current (For multiple block cmd)
      //Add support for Pre-erased
       cmd_set <= CMD24;  
-      tx_cycle <=1;       
+      tx_cycle <=1;   
+      start_tx_fifo<=1;    
    end  
    
      SEND_CMD : begin  
@@ -315,7 +343,7 @@ begin
          d_write<=1;
         end
        start_rx_fifo<=0; //Reset FIFO  
-       start_tx_fifo<=0;  //Reset FIFO 
+      // start_tx_fifo<=0;  //Reset FIFO 
        if (!cmd_busy) begin
          we_req <= 1;  
          
@@ -330,10 +358,10 @@ begin
    
     RECIVE_CMD : begin
          //When waiting for reply fill TX fifo
-        if (tx_cycle)
-         start_tx_fifo<=1; //start_fifo prebuffering
-       else
-         start_rx_fifo <=1;
+        if (rx_cycle)
+         start_rx_fifo<=1; //start_fifo prebuffering
+       //else
+         //start_rx_fifo <=1;
         
          we_req <= 0;  
           
@@ -349,20 +377,26 @@ begin
                 else begin
                     rec_failed<=1;
                     bd_int_st[4] <=1; 
-                    
+                       start_tx_fifo<=0;  
                 end 
                 `endif  
                  
                  `ifdef SIM
-                  rec_done<=1;  
+                  rec_done<=1;
+                  start_tx_fifo<=1;    
                   `endif                       
                //Check card_status[5:1] for state 4 or 6... 
                //If wrong state change interupt status reg,so software can put card in
                // transfer state and restart/cancel Data transfer
           end
          end
-         else
+         else begin
              rec_failed<=1;  //CRC-Error, CIC-Error or timeout 
+                start_tx_fifo<=0;  
+             `ifdef SIM
+                  rec_done<=1;  
+                   start_tx_fifo<=1;  
+             `endif   end
        end  
     end
     

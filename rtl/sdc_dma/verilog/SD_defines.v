@@ -6,6 +6,7 @@
 //`define SIM
 `define SYN
 
+//`define IRQ_ENABLE
 `define ACTEL
 
 //`define CUSTOM
@@ -57,17 +58,17 @@
 `define BIT_BLOCK 1044
 `define CRC_OFF 19
 `define BIT_BLOCK_REC 1024
-
 `define BIT_CRC_CYCLE 16
 
 
 //FIFO defines---------------
-`define FIFO_RX_MEM_DEPTH 4
-`define FIFO_RX_MEM_ADR_SIZE 3
+`define FIFO_RX_MEM_DEPTH 16
+`define FIFO_RX_MEM_ADR_SIZE 5
 
-`define FIFO_TX_MEM_DEPTH 64
-`define FIFO_TX_MEM_ADR_SIZE 7
+`define FIFO_TX_MEM_DEPTH 16
+`define FIFO_TX_MEM_ADR_SIZE 5
 //---------------------------
+
 
 
 

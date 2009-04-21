@@ -80,7 +80,7 @@ SD_CONTROLLER_TOP sd_controller_top_0
 	 .sd_dat_dat_i (data_bluff_in),  //sd_dat_pad_io),
 	 .sd_dat_out_o ( sd_dat_out ) ,
    .sd_dat_oe_o ( sd_dat_oe  ),
-	 .sd_clk_o  (sd_clk_pad_o)
+	 .sd_clk_o_pad  (sd_clk_pad_o)
 	 );
 
 reg [31:0] sd_mem [0:256];
@@ -88,8 +88,8 @@ reg [3:0] dat_mem [0:1040];
 reg [31:0]in_mem [0:512];
 
 // Fill the memory with values taken from a data file
-initial $readmemh("data2.txt",sd_mem);
-initial $readmemh("data_dat.txt",dat_mem);
+initial $readmemh("\\LAPTOP\exjobb\Implement\sd_f_soc\rtl\verilog\sd_flash\data2.txt",sd_mem);
+initial $readmemh("\\LAPTOP\exjobb\Implement\sd_f_soc\rtl\verilog\sd_flash\data2.txtdata_dat.txt",dat_mem);
 // Display the contents of memory
 integer k;
 initial begin
@@ -149,23 +149,24 @@ asd[7]=1'h1;
 sd_cmd_dat_i = 0 ; 
 reg_out[0] <=  32'h777F; //Timeout
 reg_out[1] <=  32'b0000_0000_0000_0000_0000_0000_0000_0001; //Clock div 
-//reg_out[2] <=  32'h211; //cmd_setting_reg
-//reg_ou1t3] <=  32'b0000_0000_0000_0000_0000_0000_0000_0001; //argument_reg
+reg_out[2] <=  32'h0; //cmd_setting_reg
+reg_out[3] <=  32'b0000_0000_0000_0000_0000_0000_0000_0000; //argument_reg
 
-reg_out[2] <=  32'h0; //System
-reg_out[3] <=  32'h0; //card
-reg_out[4] <=  128;
-reg_out[5] <=  135248;
+reg_out[4] <=  32'h31A; //cmd_setting_reg; //System
+reg_out[5] <=  32'hf0f0f0f0; //card
+
 
 adr_out[0] <=  32'b0000_0000_0000_0000_0000_0000_0010_1100;
 adr_out[1] <=  32'b0000_0000_0000_0000_0000_0000_0100_1100;
-//adr_out[2] <=  32'b0000_0000_0000_0000_0000_0000_0000_0100;
-//adr_out[3] <=  32'b0000_0000_0000_0000_0000_0000_0000_0000;
+adr_out[2] <=  32'b0000_0000_0000_0000_0000_0000_0000_0100;
+adr_out[3] <=  32'b0000_0000_0000_0000_0000_0000_0000_0000;
+adr_out[4] <=  32'b0000_0000_0000_0000_0000_0000_0000_0100;
+adr_out[5] <=  32'b0000_0000_0000_0000_0000_0000_0000_0000;
 
-adr_out[2] <=  32'h60;
-adr_out[3] <=  32'h60;
-adr_out[4] <=  32'h80;
-adr_out[5] <=  32'h80;
+//adr_out[2] <=  32'h60;
+//adr_out[3] <=  32'h60;
+//adr_out[4] <=  32'h80;
+//adr_out[5] <=  32'h80;
 
 
 //adr_out[2] <=  32'h80;
@@ -185,11 +186,11 @@ end
       wb_rst =1 ; 
       @ (posedge wb_clk_i); 
       wb_rst = 0; 
-      wbs_sds_dat_i <= reg_out[out_cnt][31:0];
+      wbs_sds_dat_i <= reg_out[0][31:0];
       wbs_sds_we_i <=1;
       wbs_sds_stb_i <=1;
       wbs_sds_cyc_i <=1;
-      wbs_sds_adr_i <= adr_out[out_cnt];
+      wbs_sds_adr_i <= adr_out[0];
       out_cnt = out_cnt +1;
       -> reset_done_trigger; 
     end 
@@ -200,24 +201,70 @@ end
  end
  
 always @ (posedge wb_clk_i) begin
- if (out_cnt <=6) begin
-  if (wbs_sds_ack_o == 1) begin
-    wbs_sds_dat_i <=  reg_out[out_cnt][31:0];
+
+out_cnt = out_cnt +1;
+// if (out_cnt==76)
+ //  out_cnt=2; 
+ if (out_cnt ==6) begin
+  
+    wbs_sds_dat_i <=  reg_out[1][31:0];
     wbs_sds_we_i <= 1;
     wbs_sds_stb_i <= 1;
     wbs_sds_cyc_i <= 1;
-    wbs_sds_adr_i <=adr_out[out_cnt];
-     out_cnt = out_cnt +1;
+    wbs_sds_adr_i <=adr_out[1];
+     
+  
+ end
+ 
+  else if (out_cnt ==9) begin
+  if (wbs_sds_ack_o != 1) begin
+    wbs_sds_dat_i <=  reg_out[2][31:0];
+    wbs_sds_we_i <= 1;
+    wbs_sds_stb_i <= 1;
+    wbs_sds_cyc_i <= 1;
+    wbs_sds_adr_i <=adr_out[2];
+     
+  end  
+ end
+ 
+  else if (out_cnt ==12) begin
+  if (wbs_sds_ack_o != 1) begin
+    wbs_sds_dat_i <=  reg_out[3][31:0];
+    wbs_sds_we_i <= 1;
+    wbs_sds_stb_i <= 1;
+    wbs_sds_cyc_i <= 1;
+    wbs_sds_adr_i <=adr_out[3];
+     
+  end  
+ end
+ 
+  else if (out_cnt ==281) begin
+  if (wbs_sds_ack_o != 1) begin
+    wbs_sds_dat_i <=  reg_out[4][31:0];
+    wbs_sds_we_i <= 1;
+    wbs_sds_stb_i <= 1;
+    wbs_sds_cyc_i <= 1;
+    wbs_sds_adr_i <=adr_out[4];
+     
+  end  
+ end
+
+ else if (out_cnt ==286) begin
+  if (wbs_sds_ack_o != 1) begin
+    wbs_sds_dat_i <=  reg_out[5][31:0];
+    wbs_sds_we_i <= 1;
+    wbs_sds_stb_i <= 1;
+    wbs_sds_cyc_i <= 1;
+    wbs_sds_adr_i <=adr_out[5];
+    
   end  
  end
 else begin
   wbs_sds_we_i <=0;
    wbs_sds_stb_i <=0;
    wbs_sds_cyc_i <=0;
-   out_cnt = out_cnt +1;
+   //out_cnt = out_cnt +1;
  end
-// if (out_cnt==76)
- //  out_cnt=2; 
  
  if (out_cnt==100) begin
    data_bluff_in<=4'b1011;

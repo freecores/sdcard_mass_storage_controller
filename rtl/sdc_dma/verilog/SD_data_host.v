@@ -11,7 +11,7 @@ module SD_DATA_SERIAL_HOST(
 input sd_clk,
 input rst,
 //Tx Fifo
-input [`SD_BUS_W-1:0] data_in ,
+input [31:0] data_in ,
 
 output reg rd,
 //Rx Fifo
@@ -148,7 +148,10 @@ end
 reg [4:0] crc_c;
 reg [3:0] last_din;
 reg [2:0] crc_s ;
- 
+reg [31:0] write_buf_0,write_buf_1, sd_data_out;
+reg out_buff_ptr,in_buff_ptr;
+reg [2:0] data_send_index;
+         
 always @ (negedge sd_clk or posedge rst   )
 begin  
  if (rst) begin
@@ -170,6 +173,9 @@ begin
    data_out<=0;
    crc_ok<=0;
    busy_int<=0;
+     data_send_index<=0;
+        out_buff_ptr<=0;
+        in_buff_ptr<=0;
  end
  else begin
  case(state)
@@ -185,29 +191,87 @@ begin
       we<=0;
       rd<=0;
       busy_n<=1;
-    
+        data_send_index<=0;
+        out_buff_ptr<=0;
+        in_buff_ptr<=0;
    end
    WRITE_DAT: begin    
       transm_complete <=0;  
        busy_n<=0;
       crc_ok<=0;
       transf_cnt<=transf_cnt+1; 
+       rd<=0; 
+       
       
+        
+      if ( (in_buff_ptr != out_buff_ptr) ||  (!transf_cnt) ) begin
+        rd <=1;           
+       if (!in_buff_ptr)
+         write_buf_0<=data_in;         
+       else
+        write_buf_1 <=data_in;    
+        
+       in_buff_ptr<=in_buff_ptr+1;
+     end
+     
+      if (!out_buff_ptr)
+        sd_data_out<=write_buf_0;
+      else
+       sd_data_out<=write_buf_1;
+        
         if (transf_cnt==1) begin
-          rd<=1;  
+          
           crc_rst<=0;
           crc_en<=1;
-          last_din <=data_in; 
+          last_din <=write_buf_0[3:0]; 
           DAT_oe_o<=1;  
           DAT_dat_o<=0;
-          crc_in<= data_in;     
+          crc_in<= write_buf_0[3:0]; 
+          data_send_index<=1;    
         end
         else if ( (transf_cnt>=2) && (transf_cnt<=`BIT_BLOCK-`CRC_OFF )) begin                 
-            rd<=1;
-          DAT_oe_o<=1;           
+          DAT_oe_o<=1;    
+        case (data_send_index) 
+           0:begin 
+              last_din <=sd_data_out[3:0];
+              crc_in <=sd_data_out[3:0];
+           end
+           1:begin 
+              last_din <=sd_data_out[7:4];
+              crc_in <=sd_data_out[7:4];
+           end
+           2:begin 
+              last_din <=sd_data_out[11:8];
+              crc_in <=sd_data_out[11:8];
+           end
+           3:begin 
+              last_din <=sd_data_out[15:12];
+              crc_in <=sd_data_out[15:12];
+           end
+           4:begin 
+              last_din <=sd_data_out[19:16];
+              crc_in <=sd_data_out[19:16];
+           end
+           5:begin 
+              last_din <=sd_data_out[23:20];
+              crc_in <=sd_data_out[23:20];
+           end
+           6:begin 
+              last_din <=sd_data_out[27:24];
+              crc_in <=sd_data_out[27:24];
+              out_buff_ptr<=out_buff_ptr+1;
+           end
+           7:begin 
+              last_din <=sd_data_out[31:28];
+              crc_in <=sd_data_out[31:28];
+              
+           end
+         endcase 
+          data_send_index<=data_send_index+1;
+                   
           DAT_dat_o<= last_din; 
-          last_din <=data_in; 
-          crc_in<= data_in;  
+          
+            
                     
           if ( transf_cnt >=`BIT_BLOCK-`CRC_OFF ) begin
              crc_en<=0;             

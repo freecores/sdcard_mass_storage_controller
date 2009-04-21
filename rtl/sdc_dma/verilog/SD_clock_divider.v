@@ -1,4 +1,4 @@
-`include "SD_defines.v"
+`include "SD_defines.v"//NONONW
 module CLOCK_DIVIDER (
   input wire CLK,
   input  [7:0] DIVIDER,
@@ -15,9 +15,9 @@ module CLOCK_DIVIDER (
    );
  `endif
  
- //`ifdef SIM
- //  assign SD_CLK = SD_CLK_O;
-//endif 
+ `ifdef SIM
+   assign SD_CLK = SD_CLK_O;
+`endif 
  
 always @ (posedge CLK or posedge RST)
 begin

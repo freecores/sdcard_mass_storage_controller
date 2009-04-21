@@ -335,7 +335,7 @@ begin : OUTPUT_LOGIC
 		  CRC_Enable=0; 
 		  CMD_OUT=0;
 		  st_dat_t<=0;
-		   word_select_counter<=0;
+		   
 	  end  
 	
 	WRITE_WR:   begin 

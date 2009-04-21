@@ -15,6 +15,9 @@ module SD_CONTROLLER_TOP(
   //SD BUS
   sd_cmd_dat_i,sd_cmd_out_o,  sd_cmd_oe_o, 
   sd_dat_dat_i, sd_dat_out_o , sd_dat_oe_o, sd_clk_o_pad
+  `ifdef IRQ_ENABLE
+   ,int_a, int_b, int_c  
+  `endif
 );
 
 
@@ -58,7 +61,10 @@ output wire sd_cmd_out_o;
 output wire sd_cmd_oe_o;
 
 output wire sd_clk_o_pad;
-
+//IRQ
+`ifdef IRQ_ENABLE
+   output int_a, int_b, int_c ; 
+  `endif
 reg wb_ack_o;
 reg wb_inta_o;
 reg new_cmd;
@@ -124,14 +130,13 @@ reg [15:0] cmd_setting_reg;
 reg [15:0] status_reg;
 reg [31:0] cmd_resp_1;
 
-reg [7:0] software_reset_reg; //Merge ?
-reg [15:0] time_out_reg;   //Merge ?
+reg [7:0] software_reset_reg; 
+reg [15:0] time_out_reg;   
 reg [15:0]normal_int_status_reg; 
 reg [15:0]error_int_status_reg;
-reg [15:0]normal_int_status_enable_reg;
-reg [15:0]error_int_status_enable_reg;
-//reg [15:0]normal_int_signal_enable_reg;
-//reg [15:0]error_int_signal_enable_reg;
+reg [15:0]normal_int_signal_enable_reg;
+reg [15:0]error_int_signal_enable_reg;
+
 
 reg [7:0]clock_divider;
 reg [15:0] Bd_Status_reg;   
@@ -140,6 +145,9 @@ reg [7:0] Bd_isr_enable_reg;
 
 
 reg Bd_isr_reset;
+reg normal_isr_reset;
+reg error_isr_reset;
+
 //Add blockram for bigger BD defines.   
    
    
@@ -192,7 +200,6 @@ reg int_busy;
 assign cmd_busy = int_busy | status_reg[0];
 wire sd_clk_o;
 
-
 wire [7:0] bd_int_st_w;
 `ifdef SD_CLK_BUS_CLK
   assign sd_clk_i = wb_clk_i;
@@ -233,6 +240,8 @@ SD_CMD_MASTER cmd_master_1
 
 .ERR_INT_REG (error_int_status_reg_w),
 .NORMAL_INT_REG (normal_int_status_reg_w),
+.ERR_INT_RST (error_isr_reset),
+.NORMAL_INT_RST (normal_isr_reset),
 .CLK_DIVIDER (clock_divider),
 .st_dat_t (st_dat_t)
 );
@@ -268,6 +277,7 @@ SD_DATA_MASTER data_master_1
 .start_rx_fifo (start_r),
 .sys_adr (sys_adr),
 .tx_empt (tx_e ),
+.tx_full (tx_f ),
 .rx_full(full_rx ),
 .busy_n       (busy_n),
 .transm_complete     (trans_complete ),
@@ -284,7 +294,7 @@ SD_DATA_MASTER data_master_1
  wire [`SD_BUS_W -1 : 0 ]data_in_rx_fifo;
 
  wire stop_transf;
- wire [`SD_BUS_W -1 : 0 ] data_out_tx_fifo;
+ wire [31: 0 ] data_out_tx_fifo;
  
 SD_DATA_SERIAL_HOST SD_DATA_SERIAL_HOST_1(
 .sd_clk     (sd_clk_o),
@@ -367,7 +377,8 @@ SD_FIFO_TX_FILLER FIFO_filer_tx (
 .sd_clk (sd_clk_o),
 .dat_o (data_out_tx_fifo   ),
 .rd   ( rd  ),
-.empty (tx_e)
+.empty (tx_e),
+.fe (tx_f)
 );
 
 SD_FIFO_RX_FILLER FIFO_filer_rx (
@@ -394,7 +405,11 @@ assign m_wb_dat_o = m_wb_dat_o_rx;
 assign m_wb_we_o = start_w ? m_wb_we_o_tx :start_r ?m_wb_we_o_rx: 0;
 assign m_wb_adr_o = start_w ? m_wb_adr_o_tx :start_r ?m_wb_adr_o_rx: 0;
 
-
+`ifdef IRQ_ENABLE
+assign int_a =normal_int_status_reg &  normal_int_signal_enable_reg;
+assign int_b = error_int_status_reg & error_int_signal_enable_reg;
+assign int_c =  Bd_isr_reg & Bd_isr_enable_reg;
+`endif
 
 always @ (re_s_tx_bd_w or a_cmp_tx_bd_w or  re_s_rx_bd_w or a_cmp_rx_bd_w or we_req_t) begin
   re_s_tx_bd<=re_s_tx_bd_w;
@@ -410,14 +425,14 @@ end
 
 wire status_reg_busy;
 reg cmd_int_busy;
+
 always @( cmd_resp_1_w  or error_int_status_reg_w or normal_int_status_reg_w ) begin
 
-
 cmd_resp_1<= cmd_resp_1_w;
-
-normal_int_status_reg<= normal_int_status_reg_w ;
-error_int_status_reg<= error_int_status_reg_w ;
+normal_int_status_reg<= normal_int_status_reg_w  ;
+error_int_status_reg<= error_int_status_reg_w  ;
 end  
+
 
 
 always @ (   cidat_w or cmd_int_busy or status_reg_w or status_reg_busy or bd_int_st_w) begin
@@ -451,8 +466,8 @@ always @(posedge wb_clk_i or posedge wb_rst_i)
       cmd_setting_reg <= 0;
 	    software_reset_reg <= 0;
 	    time_out_reg <= 0;
-	    normal_int_status_enable_reg <= 0;
-	    error_int_status_enable_reg <= 0;
+	    normal_int_signal_enable_reg <= 0;
+	    error_int_signal_enable_reg <= 0;
 	    //normal_int_signal_enable_reg <= 0;
 	    //error_int_signal_enable_reg <= 0;
 	   
@@ -467,9 +482,13 @@ always @(posedge wb_clk_i or posedge wb_rst_i)
 	    dat_in_m_tx_bd<=0;
 	    dat_in_m_rx_bd<=0;
 	    Bd_isr_enable_reg<=0;
+	    normal_isr_reset<=0;
+	    error_isr_reset<=0;
 	  end
 	  else if ((wb_stb_i  & wb_cyc_i) || wb_ack_o )begin //CS
 	    Bd_isr_reset<=0;
+	     normal_isr_reset<=  0;
+	    error_isr_reset<=  0;
 	    if (wb_we_i) begin
 	      case (wb_adr_i) 
 	        `argument: begin  
@@ -482,10 +501,10 @@ always @(posedge wb_clk_i or posedge wb_rst_i)
 	        end
           `software : software_reset_reg <=  wb_dat_i;
           `timeout : time_out_reg  <=  wb_dat_i;
-          `normal_iser : normal_int_status_enable_reg <=  wb_dat_i;
-          `error_iser : error_int_status_enable_reg  <=  wb_dat_i;
-         // `normal_isiger : normal_int_signal_enable_reg  <=  wb_dat_i;
-         // `error_isiger : error_int_signal_enable_reg <=  wb_dat_i;	      
+          `normal_iser : normal_int_signal_enable_reg <=  wb_dat_i;
+          `error_iser : error_int_signal_enable_reg  <=  wb_dat_i;
+        `normal_isr : normal_isr_reset<=  1;
+          `error_isr:  error_isr_reset<=  1;
 	        `clock_d: clock_divider  <=  wb_dat_i;
 	        `bd_isr: Bd_isr_reset<=  1;	    
 	        `bd_iser : Bd_isr_enable_reg <= wb_dat_i ;     
@@ -561,10 +580,9 @@ always @(posedge wb_clk_i )begin
            `timeout : wb_dat_o  <=  time_out_reg ;
            `normal_isr : wb_dat_o <=  normal_int_status_reg ;
            `error_isr : wb_dat_o  <=  error_int_status_reg ;
-           `normal_iser : wb_dat_o <=  normal_int_status_enable_reg ;
-           `error_iser : wb_dat_o  <=  error_int_status_enable_reg ;
-           //`normal_isiger : wb_dat_o <=  normal_int_signal_enable_reg ;
-          // `error_isiger : wb_dat_o  <=  error_int_signal_enable_reg ;
+           `normal_iser : wb_dat_o <=  normal_int_signal_enable_reg ;
+           `error_iser : wb_dat_o  <=  error_int_signal_enable_reg ;
+          
 	         `capa  : wb_dat_o  <=  capabilies_reg ; 
 	         `bd_status : wb_dat_o  <=  Bd_Status_reg; 
 	         `bd_isr : wb_dat_o  <=  Bd_isr_reg ; 
