@@ -11,10 +11,7 @@ module sd_controller_fifo_wba
   wb_adr_i, wb_sel_i, wb_we_i, wb_cyc_i, wb_stb_i, wb_ack_o, 
   
     // WISHBONE master
-  m_wb_adr_o, m_wb_sel_o, m_wb_we_o, 
-  m_wb_dat_o, m_wb_dat_i, m_wb_cyc_o, 
-  m_wb_stb_o, m_wb_ack_i, 
-  m_wb_cti_o, m_wb_bte_o,
+
   //SD BUS
   sd_cmd_dat_i,sd_cmd_out_o,  sd_cmd_oe_o, 
   sd_dat_dat_i, sd_dat_out_o , sd_dat_oe_o, sd_clk_o_pad
