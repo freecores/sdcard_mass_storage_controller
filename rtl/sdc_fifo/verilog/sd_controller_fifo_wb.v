@@ -19,7 +19,10 @@ module sd_controller_fifo_wba
   sd_cmd_dat_i,sd_cmd_out_o,  sd_cmd_oe_o, 
   sd_dat_dat_i, sd_dat_out_o , sd_dat_oe_o, sd_clk_o_pad
   //PLL CLK_IN
-  // sd_clk_i_pad
+   `ifdef SD_CLK_EXT
+    ,sd_clk_i_pad
+   `endif
+  
 
 );
 input           wb_clk_i;     // WISHBONE clock
@@ -38,17 +41,7 @@ input           wb_stb_i;     // WISHBONE strobe input
 output reg          wb_ack_o;     // WISHBONE acknowledge output
 
 // WISHBONE master
-output  [31:0]  m_wb_adr_o;
-output   [3:0]  m_wb_sel_o;
-output          m_wb_we_o;
 
-input   [31:0]  m_wb_dat_i;
-output  [31:0]  m_wb_dat_o;
-output          m_wb_cyc_o;
-output          m_wb_stb_o;
-input           m_wb_ack_i;
-output  	[2:0] m_wb_cti_o;
-output	[1:0]	 m_wb_bte_o;
 
 input wire [3:0] sd_dat_dat_i;
 output wire [3:0] sd_dat_out_o;
@@ -60,7 +53,7 @@ output wire sd_cmd_oe_o;
 
 output sd_clk_o_pad;
 wire sd_clk_i;
-//input sd_clk_i_pad;
+input sd_clk_i_pad;
 
 `define tx_cmd_fifo 4'h0
 `define rx_cmd_fifo 4'h1
