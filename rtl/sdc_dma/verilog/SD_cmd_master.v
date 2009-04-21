@@ -1,5 +1,4 @@
 `include "SD_defines.v"
-
 module SD_CMD_MASTER(
 input CLK_PAD_IO,
 input SD_CLK_I,
@@ -20,6 +19,8 @@ output reg [31:0] RESP_1_REG,
 
 output reg [15:0] ERR_INT_REG, 
 output reg [15:0] NORMAL_INT_REG, 
+input ERR_INT_RST,
+input NORMAL_INT_RST,
 input  [7:0] CLK_DIVIDER,
 output [1:0] st_dat_t
 );
@@ -261,16 +262,16 @@ begin
             `EI = 1;
              
            end 
-           else if (index_check_enable &  (cmd_out[37:32] != cmd_in [37:32]) ) begin
+           if (index_check_enable &  (cmd_out[37:32] != cmd_in [37:32]) ) begin
             `CIE=1;
             `EI = 1;
             
            end
-          // else begin
-             `EI = 0;
+          
+             
              `CC = 1;  
             
-            
+             if (response_size !=0)
               RESP_1_REG=cmd_in[31:0];
             
           // end 
@@ -278,6 +279,10 @@ begin
        end //Status change
      end //EXECUTE state
    endcase
+   if (ERR_INT_RST)
+     ERR_INT_REG=0;
+   if (NORMAL_INT_RST)
+     NORMAL_INT_REG=0;
   end
 end
 
