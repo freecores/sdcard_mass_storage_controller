@@ -20,9 +20,9 @@
 
 
 //SD-Clock Defines ---------
-//Use bus clock or a seperate clock?
+//Use bus clock or a seperate external clock?
 `define SD_CLK_BUS_CLK
-//`define SD_CLK_SEP
+//`define SD_CLK_EXT
 
 // Use internal clock divider?
 `define SD_CLK_STATIC
