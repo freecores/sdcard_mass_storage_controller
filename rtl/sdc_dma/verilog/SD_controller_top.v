@@ -15,6 +15,9 @@ module SD_CONTROLLER_TOP(
   //SD BUS
   sd_cmd_dat_i,sd_cmd_out_o,  sd_cmd_oe_o, 
   sd_dat_dat_i, sd_dat_out_o , sd_dat_oe_o, sd_clk_o_pad
+  `ifdef SD_CLK_SEP
+   ,sd_clk_i_pad
+  `endif
   `ifdef IRQ_ENABLE
    ,int_a, int_b, int_c  
   `endif
@@ -61,6 +64,8 @@ output wire sd_cmd_out_o; //Command out to SDcard
 output wire sd_cmd_oe_o; //SD Card tristate CMD Output enable (Connects on the SoC TopLevel)
 
 //IRQ
+
+
 `ifdef IRQ_ENABLE
    output int_a, int_b, int_c ; 
   `endif
@@ -206,16 +211,19 @@ output sd_clk_o_pad;
 `ifdef SD_CLK_BUS_CLK
   assign sd_clk_i = wb_clk_i;
 `endif 
+`ifdef SD_CLK_SEP
+  sd_clk_i = sd_clk_i_pad
+  `endif
 
 `ifdef SD_CLK_STATIC
    assign sd_clk_o = sd_clk_i;
 `endif
    
 `ifdef SD_CLK_DYNAMIC
-  CLOCK_DIVIDER CLOCK_DIVIDER_1 (
+  SD_CLOCK_DIVIDER CLOCK_DIVIDER_1 (
  .CLK (sd_clk_i),
  .DIVIDER (clock_divider),
- .RST  (wb_rst_i),
+ .RST  (wb_rst_i | software_reset_reg[0]),
  .SD_CLK  (sd_clk_o)  
 );
 `endif
@@ -287,7 +295,7 @@ SD_DATA_MASTER data_master_1
 .CIDAT  (cidat_w)
 );
  
-
+wire [31:0] data_out_tx_fifo;
 SD_DATA_SERIAL_HOST SD_DATA_SERIAL_HOST_1(
 .sd_clk     (sd_clk_o),
 .rst        (wb_rst_i | software_reset_reg[0]),
