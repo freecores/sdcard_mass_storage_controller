@@ -87,6 +87,24 @@ parameter STOP_RECIVE_CMD  =  9'b100000000;
 
 reg trans_done;
 reg trans_failed;
+reg internal_transm_complete;
+reg transm_complete_q;
+
+always @ (posedge clk or posedge rst )
+begin
+	if  (rst) begin
+		internal_transm_complete <=1'b0;
+		transm_complete_q<=0;
+	end
+	else begin  
+		transm_complete_q<=transm_complete;
+		internal_transm_complete<=transm_complete_q;
+	end
+
+
+end
+
+
 
 
 always @ (state or resend_try_cnt or tx_full or free_tx_bd or free_rx_bd or bd_cnt or send_done or rec_done or rec_failed or trans_done or trans_failed)
@@ -381,14 +399,15 @@ begin
                 end 
                 `endif  
                  
-                 `ifdef SIM
-                  rec_done<=1;
-                  start_tx_fifo<=1;    
-                  `endif                       
+                                     
                //Check card_status[5:1] for state 4 or 6... 
                //If wrong state change interupt status reg,so software can put card in
                // transfer state and restart/cancel Data transfer
           end
+           `ifdef SIM
+                  rec_done<=1;
+                  start_tx_fifo<=1;    
+          `endif  
          end
          else begin
              rec_failed<=1;  //CRC-Error, CIC-Error or timeout 
@@ -416,7 +435,7 @@ begin
     end            
       //Check for fifo underflow, 
       //2 DO: if deteced stop transfer, reset data host
-      if (transm_complete) begin //Transfer complete
+      if (internal_transm_complete) begin //Transfer complete
          ack_transfer<=1;
         
          if ((!crc_ok) && (busy_n))  begin //Wrong CRC and Data line free.
