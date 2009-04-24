@@ -1,5 +1,5 @@
 `include "SD_defines.v"//NONONW
-module CLOCK_DIVIDER (
+module SD_CLOCK_DIVIDER (
   input wire CLK,
   input  [7:0] DIVIDER,
   input wire RST,
@@ -9,10 +9,12 @@ module CLOCK_DIVIDER (
   reg [7:0] ClockDiv;
   reg SD_CLK_O;
 `ifdef SYN
+  `ifdef ACTEL
   CLKINT CLKINT0
   (.A (SD_CLK_O),
    .Y (SD_CLK) 
    );
+   `endif
  `endif
  
  `ifdef SIM

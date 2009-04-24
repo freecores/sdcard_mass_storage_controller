@@ -1,4 +1,4 @@
-module CRC_7(BITVAL, Enable, CLK, RST, CRC);
+module SD_CRC_7(BITVAL, Enable, CLK, RST, CRC);
    input        BITVAL;// Next input bit
    input Enable;
    input        CLK;                           // Current bit valid (Clock)

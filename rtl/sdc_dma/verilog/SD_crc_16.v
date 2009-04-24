@@ -2,8 +2,10 @@
 // CRC Generation Unit - Linear Feedback Shift Register implementation
 // (c) Kay Gorontzi, GHSi.de, distributed under the terms of LGPL
 // https://www.ghsi.de/CRC/index.php?
+
+// https://www.ghsi.de/CRC/index.php?
 // =========================================================================
-module CRC_16(BITVAL, Enable, CLK, RST, CRC);
+module SD_CRC_16(BITVAL, Enable, CLK, RST, CRC);
  input        BITVAL;// Next input bit
    input Enable;
    input        CLK;                           // Current bit valid (Clock)

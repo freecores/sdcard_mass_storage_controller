@@ -1,7 +1,7 @@
 `include "SD_defines.v"
 //-------------------------
 //-------------------------
-module CMD_SERIAL_HOST ( SD_CLK_IN, RST_IN, SETTING_IN,GO_IDLE ,CMD_IN, REQ_IN, ACK_OUT, REQ_OUT,ACK_IN, CMD_OUT, STATUS, cmd_dat_i, cmd_out_o, cmd_oe_o, st_dat_t);
+module SD_CMD_SERIAL_HOST ( SD_CLK_IN, RST_IN, SETTING_IN,GO_IDLE ,CMD_IN, REQ_IN, ACK_OUT, REQ_OUT,ACK_IN, CMD_OUT, STATUS, cmd_dat_i, cmd_out_o, cmd_oe_o, st_dat_t);
 //---------------Input ports---------------
 input SD_CLK_IN;
 input  RST_IN;
@@ -105,7 +105,7 @@ reg Req_internal_in;
 reg q1;
 reg Ack_internal_in;
 //------------------------------------------   
-CRC_7 CRC_7( 
+SD_CRC_7 CRC_7( 
 CRC_OUT,
 CRC_Enable,
 SD_CLK_IN,
