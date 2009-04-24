@@ -72,7 +72,7 @@ parameter SETUP   =  3'b010;
 parameter EXECUTE  =  3'b100;
 
 //---------------Input ports---------------
-CMD_SERIAL_HOST CMD_SERIAL_HOST_1(
+SD_CMD_SERIAL_HOST CMD_SERIAL_HOST_1(
   .SD_CLK_IN (SD_CLK_I), 
   .RST_IN  (RST_PAD_I), 
   .SETTING_IN (settings),
@@ -91,16 +91,31 @@ CMD_SERIAL_HOST CMD_SERIAL_HOST_1(
 );
 
 reg ack_in_int;
+reg ack_q;
+reg req_q;
+reg req_in_int;
+always @ (posedge CLK_PAD_IO or posedge RST_PAD_I   )
+begin
+  if (RST_PAD_I) begin
+    req_q<=0;
+    req_in_int<=0;
+ end 
+else begin
+  req_q<=req_in;  
+  req_in_int<=req_q;
+end
+end  
 
 
 always @ (posedge CLK_PAD_IO or posedge RST_PAD_I   )
 begin
   if (RST_PAD_I) begin
-   
+    ack_q<=0;
     ack_in_int<=0;
  end 
 else begin
-  ack_in_int<=ack_in;
+  ack_q<=ack_in;
+  ack_in_int<=ack_q;
 end
   
   
@@ -190,7 +205,7 @@ begin
     req_out=0;
 		ack_out =0;
 		`CICMD =0; 
-    if ( req_in == 1) begin     //Status change
+    if ( req_in_int == 1) begin     //Status change
         status=serial_status;
         ack_out = 1;
         STATUS_REG[15:12] =serial_status[3:0];
@@ -245,11 +260,11 @@ begin
 		ack_out =0;
     
     //Start sending when serial module is ready
-   	if (ack_in == 1) begin	    	     
+   	if (ack_in_int == 1) begin	    	     
 	    		req_out =1;	   			   		
 	  end	
 	   //Incoming New Status 
-	  else if ( req_in == 1) begin   
+	  else if ( req_in_int == 1) begin   
         status=serial_status;
         STATUS_REG[15:12] =serial_status[3:0];
         ack_out = 1; 
