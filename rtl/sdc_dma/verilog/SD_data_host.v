@@ -52,18 +52,23 @@ reg busy_int;
 genvar i;
 generate
 for(i=0; i<`SD_BUS_W; i=i+1) begin:CRC_16_gen
-  CRC_16 CRC_16_i (crc_in[i],crc_en, sd_clk, crc_rst, crc_out[i]);
+  SD_CRC_16 CRC_16_i (crc_in[i],crc_en, sd_clk, crc_rst, crc_out[i]);
 end
 endgenerate
 
 reg ack_transfer_int;
+reg ack_q;
 always @ (posedge sd_clk or posedge rst   )
 begin
-if (rst)
+if (rst) begin
   ack_transfer_int <=0;
-else
- ack_transfer_int<=ack_transfer;
+  ack_q<=0;end
+else begin
+  ack_q<=ack_transfer;
+  ack_transfer_int<=ack_q;
+  end
 end
+
 reg q_start_bit;
 always @ (state or start_dat or q_start_bit or  transf_cnt or crc_status or busy_int or DAT_dat_i or ack_transfer_int)
 begin : FSM_COMBO
