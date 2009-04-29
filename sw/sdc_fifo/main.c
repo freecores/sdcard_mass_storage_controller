@@ -63,7 +63,7 @@
 #include "board.h"
 #include "uart.h"
 #include "main.h"
-
+#define SD_REG(REG)  REG32(SD_CONTROLLER_BASE+REG) 
 /*$$PRIVATE MACROS*/
 /******************************************************************************/
 /*                                                                            */
@@ -148,12 +148,17 @@ void external_exeption()
 
 
 
+//TO do
+// Always check if error in repose (CRC, CICE) etc
+// Always check for CICM (Command inhibit before senindg)
+// Timeout when polling
+// Divied into dividing Functions
+// Clean up
 
 
-//SDC_DEFINES
 #define BUSY 0x80
 #define CRC_TOKEN 0x29
-#define SD_REG(REG)  REG32(SD_CONTROLLER_BASE+REG) 
+
 //SDC_REGISTERS
 #define TX_CMD_FIFO 0x00
 #define RX_CMD_FIFO 0x04
@@ -229,22 +234,9 @@ bool mmc_get_cmd_rsp (volatile unsigned char *rsp)
 
 
 
-bool cmd_trans_succesful (volatile unsigned char resp)
-{
-  if ( (resp & 0x1) != 1 ) 
-	  return 1;
-  else
-	  return 0;
 
-}
-void write_0(int i)
-{  
-    while( i !=0){
-     SD_REG(TX_CMD_FIFO)=0;
-	 i--;
-}
 
-}
+
 int  mmc_init() 
 
 {
