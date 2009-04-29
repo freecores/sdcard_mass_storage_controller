@@ -8,7 +8,7 @@ wire [3:0] sd_dat_out;
 assign sd_cmd_pad_io = sd_cmd_oe ? sd_cmd_out : 1'bZ ;
 assign sd_dat_pad_io = sd_dat_oe ? sd_dat_out : 4'bzzzz ;
 
-SD_CONTROLLER_TOP sd_controller_fifo_wba0
+sd_controller_fifo_wba SD_CONTROLLER_TOP
 	(
 	 .wb_clk_i(wb_clk),
 	 .wb_rst_i(wb_rst),
