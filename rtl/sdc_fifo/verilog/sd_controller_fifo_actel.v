@@ -23,7 +23,6 @@ output wire sd_cmd_out_o;
 output wire sd_cmd_oe_o;
 output sd_clk_o_pad;
 wire sd_clk_i;
-input sd_clk_i_pad;
 reg [7:0] controll_reg;
 reg [7:0] status_reg;
 reg [7:0] command_timeout_reg;
@@ -204,14 +203,6 @@ always @(posedge wb_clk_i or posedge wb_rst_i )begin
   end  
 end
 end
- assign m_wb_adr_o =0;
- assign m_wb_sel_o =0; 
- assign m_wb_we_o=0;
- assign m_wb_dat_o =0;
- assign m_wb_cyc_o=0;
- assign m_wb_stb_o=0;
- assign m_wb_cti_o=0;
- assign m_wb_bte_o=0;
 endmodule
 module sd_cmd_phy ( 
 input sd_clk, 
@@ -712,7 +703,7 @@ module sd_fifo
 		      (sd_adr_i==2'd1) ? {sd_adr_i,wadr2} :
 		      (sd_adr_i==2'd2) ? {sd_adr_i,radr3} : 
 		      {sd_adr_i,wadr4};
-   versatile_fifo_dptam_dw
+   versatile_fifo_dptam_dw 
      dpram
      (
       .d_a(wb_dat_i),
@@ -753,6 +744,60 @@ module sd_counter
 	 q <= (q_next>>1) ^ q_next;
    assign q_bin = qi;
 endmodule
+module versatile_fifo_async_cmp ( wptr, rptr, fifo_empty, fifo_full, wclk, rclk, rst );
+   parameter ADDR_WIDTH = 4;   
+   parameter N = ADDR_WIDTH-1;
+   parameter Q1 = 2'b00;
+   parameter Q2 = 2'b01;
+   parameter Q3 = 2'b11;
+   parameter Q4 = 2'b10;
+   parameter going_empty = 1'b0;
+   parameter going_full  = 1'b1;
+   input [N:0]  wptr, rptr;   
+   output reg	fifo_empty, fifo_full;
+   input 	wclk, rclk, rst;   
+   reg 	direction, direction_set, direction_clr;
+   wire async_empty, async_full;
+   reg 	fifo_full2, fifo_empty2;   
+   always @ (wptr[N:N-1] or rptr[N:N-1])
+     case ({wptr[N:N-1],rptr[N:N-1]})
+       {Q1,Q2} : direction_set <= 1'b1;
+       {Q2,Q3} : direction_set <= 1'b1;
+       {Q3,Q4} : direction_set <= 1'b1;
+       {Q4,Q1} : direction_set <= 1'b1;
+       default : direction_set <= 1'b0;
+     endcase
+   always @ (wptr[N:N-1] or rptr[N:N-1] or rst)
+     if (rst)
+       direction_clr <= 1'b1;
+     else
+       case ({wptr[N:N-1],rptr[N:N-1]})
+	 {Q2,Q1} : direction_clr <= 1'b1;
+	 {Q3,Q2} : direction_clr <= 1'b1;
+	 {Q4,Q3} : direction_clr <= 1'b1;
+	 {Q1,Q4} : direction_clr <= 1'b1;
+	 default : direction_clr <= 1'b0;
+       endcase
+   always @ (posedge direction_set or posedge direction_clr)
+     if (direction_clr)
+       direction <= going_empty;
+     else
+       direction <= going_full;
+   assign async_empty = (wptr == rptr) && (direction==going_empty);
+   assign async_full  = (wptr == rptr) && (direction==going_full);
+   always @ (posedge wclk or posedge rst or posedge async_full)
+     if (rst)
+       {fifo_full, fifo_full2} <= 2'b00;
+     else if (async_full)
+       {fifo_full, fifo_full2} <= 2'b11;
+     else
+       {fifo_full, fifo_full2} <= {fifo_full2, async_full};
+   always @ (posedge rclk or posedge async_empty)
+     if (async_empty)
+       {fifo_empty, fifo_empty2} <= 2'b11;
+     else
+       {fifo_empty,fifo_empty2} <= {fifo_empty2,async_empty};   
+endmodule 
 module CRC_7(BITVAL, Enable, CLK, RST, CRC);
    input        BITVAL;
    input Enable;

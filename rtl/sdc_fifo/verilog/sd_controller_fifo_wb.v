@@ -50,7 +50,12 @@ output wire sd_cmd_oe_o;
 
 output sd_clk_o_pad;
 wire sd_clk_i;
-input sd_clk_i_pad;
+
+   `ifdef SD_CLK_EXT
+     input sd_clk_i_pad;
+   `endif
+  
+
 
 `define tx_cmd_fifo 4'h0
 `define rx_cmd_fifo 4'h1
@@ -287,15 +292,7 @@ end
  
 
 //just to get rid of warnings....
- assign m_wb_adr_o =0;
- assign m_wb_sel_o =0; 
- assign m_wb_we_o=0;
- assign m_wb_dat_o =0;
 
- assign m_wb_cyc_o=0;
- assign m_wb_stb_o=0;
- assign m_wb_cti_o=0;
- assign m_wb_bte_o=0;
 
 
 
