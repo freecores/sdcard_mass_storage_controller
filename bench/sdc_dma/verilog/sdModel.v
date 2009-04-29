@@ -1,4 +1,5 @@
 //`include "timescale.v"
+`include "SD_defines.v"
 `define tTLH 10 //Clock rise time
 `define tHL 10 //Clock fall time
 `define tISU 6 //Input setup time
@@ -6,10 +7,14 @@
 `define tODL 14 //Output delay
 
 `define BLOCKSIZE 512
-`define MEMSIZE 1000
+`define MEMSIZE 2048 // 4 block
 `define BLOCK_BUFFER_SIZE 1
 `define TIME_BUSY 64
 
+`define PRG 7
+`define RCV 6
+`define DATAS 5
+`define TRAN 4
 module sdModel(
   input sdClk,
   tri cmd,
@@ -21,17 +26,24 @@ module sdModel(
 reg oeCmd;
 reg oeDat;
 reg cmdOut;
-reg datOut;
+reg [3:0] datOut;
+reg [10:0] transf_cnt;
+
+    
 
 reg [5:0] lastCMD;
 reg cardIdentificationState;
+reg CardTransferActive;
+reg [2:0] BusWidth;
 
 assign cmd = oeCmd ? cmdOut : 1'bz;
 assign dat = oeDat ? datOut : 4'bz;
 
+reg InbuffStatus;
+reg [31:0] BlockAddr;
+reg [7:0] Inbuff [0:511];
+reg [7:0] FLASHmem [0:`MEMSIZE];
 
-reg [`MEMSIZE:0] FLASHmem [0:`BLOCKSIZE-1];
-reg  [`BLOCK_BUFFER_SIZE-1:0] indatabuffer [0:`BLOCKSIZE-1];
 
 reg [46:0]inCmd;
 reg [5:0]cmdRead;
@@ -45,9 +57,10 @@ reg [31:0] OCR;
 reg [120:0] CID;
 reg Busy; //0 when busy
 wire [6:0] crcOut;
- 
-reg [3 :0]CurrentState; 
- 
+reg [3:0] crc_c;
+
+reg [3:0] CurrentState; 
+reg [3:0] DataCurrentState; 
 `define RCASTART 16'h20
 `define OCRSTART 32'hff8000
 `define STATUSSTART 32'h0
@@ -55,6 +68,9 @@ reg [3 :0]CurrentState;
 
 `define outDelay 4 
 reg [2:0] outDelayCnt;
+reg [9:0] flash_write_cnt;
+reg [8:0] flash_blockwrite_cnt;
+
 parameter SIZE = 10;
 parameter CONTENT_SIZE = 40;
 parameter 
@@ -65,21 +81,54 @@ parameter
 reg [SIZE-1:0] state;
 reg [SIZE-1:0] next_state;
 
+parameter 
+    DATA_IDLE   =10'b0000_0000_01,    
+    READ_WAITS  =10'b0000_0000_10,
+    READ_DATA  = 10'b0000_0001_00,
+    WRITE_FLASH =10'b0000_0010_00,
+    WRITE_DATA  =10'b0000_0100_00;
+parameter okcrctoken = 4'b0101;
+parameter invalidcrctoken = 4'b1111;
+reg [SIZE-1:0] dataState;
+reg [SIZE-1:0] next_datastate;
+
 reg ValidCmd;
 reg inValidCmd;
 
 reg [7:0] response_S;
 reg [135:0] response_CMD;
 integer responseType;
-CRC_7 CRC_7( 
+
+     reg [9:0] block_cnt;
+     reg wptr;
+     reg crc_ok;
+     reg [3:0] last_din;
+     
+
+
+reg crcDat_rst;
+reg crcDat_en;
+reg [3:0] crcDat_in; 
+wire [15:0] crcDat_out [3:0];
+
+genvar i;
+generate
+for(i=0; i<4; i=i+1) begin:CRC_16_gen
+  SD_CRC_16 CRC_16_i (crcDat_in[i],crcDat_en, sd_Clk, crcDat_rst, crcDat_out[i]);
+end
+endgenerate  
+SD_CRC_7 CRC_7( 
 crcIn,
 crcEn,
 sdClk,
 crcRst,
 crcOut);
+
+
 reg appendCrc;
 reg [5:0] startUppCnt;
 
+reg q_start_bit;
 //Card initinCMd
 initial $readmemh("FLASH.txt",FLASHmem);
 
@@ -93,15 +142,20 @@ reg [2:0] crcCnt;
 initial begin 
   cardIdentificationState<=1;
   state<=IDLE;
+  dataState<=DATA_IDLE;
   Busy<=0;
   oeCmd<=0;
   crcCnt<=0;
+  CardTransferActive<=0;
   qCmd<=1;
   oeDat<=0;
   cmdOut<=0;
   cmdWrite<=0;
+  
+  InbuffStatus<=0;
   datOut<=0;
   inCmd<=0;
+  BusWidth<=1;
   responseType=0;
   crcIn<=0;
   response_S<=0;
@@ -117,6 +171,19 @@ initial begin
   CID<=`CIDSTART;
   response_CMD<=0;
   outDelayCnt<=0;
+  crcDat_rst<=1;
+  crcDat_en<=0;
+  crcDat_in<=0; 
+  transf_cnt<=0;
+  BlockAddr<=0;
+  block_cnt <=0;     
+     wptr<=0;
+     transf_cnt<=0;
+     crcDat_rst<=1;
+     crcDat_en<=0;
+     crcDat_in<=0; 
+     flash_write_cnt<=0;
+flash_blockwrite_cnt<=0;
 end
 
 //CARD logic
@@ -157,14 +224,76 @@ READ_CMD: begin
  endcase
 end
 
+always @ (dataState or CardStatus or crc_c or flash_write_cnt or q_start_bit)
+begin : FSM_COMBODAT
+ next_datastate  = 0;   
+case(dataState)  
+ DATA_IDLE: begin
+   if (CardStatus[12:9]==`RCV ) 
+     next_datastate = READ_WAITS;
+   else if (CardStatus[12:9]==`DATAS ) 
+     next_datastate = WRITE_DATA;
+   else
+     next_datastate = DATA_IDLE; 
+ end  
+  
+ READ_WAITS: begin
+   if (q_start_bit == 1'b0 ) 
+     next_datastate =  READ_DATA;
+   else
+     next_datastate =  READ_WAITS; 
+ end
+ 
+ READ_DATA : begin  
+  if (crc_c==0  ) 
+     next_datastate =  WRITE_FLASH;
+  else
+     next_datastate =  READ_DATA;
+ end
+  WRITE_FLASH : begin
+  if (flash_write_cnt>265 ) 
+     next_datastate =  DATA_IDLE;
+  else
+     next_datastate =  WRITE_FLASH;
+    
+     
+end
+
+ 
+ 
+ 
+ 
+ endcase
+end
+
+always @ (posedge sdClk  )
+ begin 
+  
+    q_start_bit <= dat[0];
+ end
+
 always @ (posedge sdClk  )
 begin : FSM_SEQ
-    state <= next_state;
- 
+    state <= next_state; 
+end
+
+always @ (posedge sdClk  )
+begin : FSM_SEQDAT
+    dataState <= next_datastate; 
 end
 
 
+
 always @ (posedge sdClk) begin
+if (CardTransferActive) begin
+ if (InbuffStatus==0) //empty
+   CardStatus[8]<=1;
+  else
+   CardStatus[8]<=0;
+  end
+else 
+  CardStatus[8]<=0;
+     
  startUppCnt<=startUppCnt+1;
  OCR[31]<=Busy;
  if (startUppCnt == `TIME_BUSY)
@@ -227,7 +356,8 @@ always @ (posedge sdClk) begin
       $display(sdModel_file_desc, "**sd_Model Commando No Stop Bit Error") ;
     end  
     else begin
-      
+      if(outDelayCnt ==0)
+        CardStatus[3]<=0;
       case(inCmd[45:40])
         0 : response_S <= 0;
         2 : response_S <= 136;
@@ -235,6 +365,7 @@ always @ (posedge sdClk) begin
         7 : response_S <= 48;
         8 : response_S <= 0;
         14 : response_S <= 0;
+        16 : response_S <= 48;
         17 : response_S <= 48;
         24 : response_S <= 48;
         33 : response_S <= 48;
@@ -258,7 +389,7 @@ always @ (posedge sdClk) begin
         CardStatus[12:9] <=2;
         end
         3 :  begin 
-           if (lastCMD != 3 && outDelayCnt==0 ) begin
+           if (lastCMD != 2 && outDelayCnt==0 ) begin
                $fdisplay(sdModel_file_desc, "**Error in sequnce, CMD 2 should precede 3 in Startup state") ;
                $display(sdModel_file_desc, "**Error in sequnce, CMD 2 should precede 3 in Startup state") ;
                CardStatus[3]<=1;
@@ -268,10 +399,69 @@ always @ (posedge sdClk) begin
         appendCrc<=1;
         CardStatus[12:9] <=3;
         cardIdentificationState<=0;
-        end        
+       end
+        6 : begin         
+           if (lastCMD == 55 && outDelayCnt==0) begin             
+              if (inCmd[9:8] == 2'b10) begin
+               BusWidth <=4;      
+                    $display(sdModel_file_desc, "**BUS WIDTH 4 ") ;
+               end      
+              else
+               BusWidth <=1;               
+              
+              response_S<=48;
+              response_CMD[127:96] <= CardStatus; 
+           end   
+           else if (outDelayCnt==0)begin
+             response_CMD <= 0;
+             response_S<=0;
+             $fdisplay(sdModel_file_desc, "**Error Invalid CMD, %h",inCmd[45:40]) ;
+             $display(sdModel_file_desc, "**Error Invalid CMD, %h",inCmd[45:40]) ;
+            end
+        end   
+        7: begin
+         if (outDelayCnt==0) begin 
+          if (inCmd[39:24]== RCA[15:0]) begin
+              CardTransferActive <= 1;
+              response_CMD[127:96] <= CardStatus ; 
+              CardStatus[12:9] <=`TRAN;                            
+          end
+          else begin
+               CardTransferActive <= 0;
+               response_CMD[127:96] <= CardStatus ; 
+               CardStatus[12:9] <=3;  
+          end          
+         end        
+        end      
         8 : response_CMD[127:96] <= 0; //V1.0 card
+        16 : begin
+          response_CMD[127:96] <= CardStatus ;         
+                
+        end 
         17 : response_CMD[127:96]<= 48;
-        24 : response_CMD[127:96] <= 48;
+        24 : begin
+          if (outDelayCnt==0) begin 
+            if (CardStatus[12:9] == 4) begin //If card is in transferstate
+              if (CardStatus[8]) begin //If Free write buffer           
+                CardStatus[12:9] <=`RCV;//Put card in Rcv state
+                response_CMD[127:96] <= CardStatus ;
+                BlockAddr = inCmd[39:8];
+                if (BlockAddr%512 !=0)
+                  $display("**Block Misalign Error");
+              end
+              else begin
+                response_CMD[127:96] <= CardStatus;
+                 $fdisplay(sdModel_file_desc, "**Error Try to blockwrite when No Free Writebuffer") ;
+                 $display("**Error Try to blockwrite when No Free Writebuffer") ;
+             end
+           end
+           else begin
+             response_S <= 0;
+             response_CMD[127:96] <= 0; 
+           end
+         end
+    
+       end 
         33 : response_CMD[127:96] <= 48;
         55 : 
         begin
@@ -284,7 +474,7 @@ always @ (posedge sdClk) begin
          if (cardIdentificationState) begin
             if (lastCMD != 55 && outDelayCnt==0) begin
                $fdisplay(sdModel_file_desc, "**Error in sequnce, CMD 55 should precede 41 in Startup state") ;
-               $display(sdModel_file_desc, "**Error in sequnce, CMD 55 should precede 41 in Startup state") ;
+               $display( "**Error in sequnce, CMD 55 should precede 41 in Startup state") ;
                CardStatus[3]<=1;
             end
             else begin
@@ -355,30 +545,148 @@ SEND_CMD: begin
  endcase
 end
 
+always @ (posedge sdClk) begin
+  
+  case (dataState)
+  DATA_IDLE: begin
+      oeDat<=0;
+  end
+  
+  READ_WAITS: begin
+      oeDat<=0;
+      crcDat_rst<=0;
+      crcDat_en<=1;
+      crcDat_in<=0; 
+      crc_c<=15;//
+      crc_ok<=1;      
+  end       
+  READ_DATA: begin
+  
+     
+    InbuffStatus<=1;
+    if (transf_cnt<`BIT_BLOCK_REC) begin
+       if (wptr)
+         Inbuff[block_cnt][7:4] <= dat;
+       else
+          Inbuff[block_cnt][3:0] <= dat;       
+      
+       crcDat_in<=dat;
+       crc_ok<=1;
+       transf_cnt<=transf_cnt+1; 
+       if (wptr)
+         block_cnt<=block_cnt+1;     
+       wptr<=~wptr;
+    end
+    else if  ( transf_cnt <= (`BIT_BLOCK_REC +`BIT_CRC_CYCLE-1)) begin
+       transf_cnt<=transf_cnt+1; 
+       crcDat_en<=0;  
+       last_din <=dat; 
+       
+       if (transf_cnt> `BIT_BLOCK_REC-1) begin       
+        crc_c<=crc_c-1;
+                                
+          if (crcDat_out[0][crc_c] != last_din[0])
+           crc_ok<=0;
+          if  (crcDat_out[1][crc_c] != last_din[1])
+           crc_ok<=0;
+          if  (crcDat_out[2][crc_c] != last_din[2])
+           crc_ok<=0;
+          if  (crcDat_out[3][crc_c] != last_din[3])
+           crc_ok<=0;         
+      end                 
+    end 
+  end 
+  WRITE_FLASH: begin
+     oeDat<=1;
+     block_cnt <=0;     
+     wptr<=0;
+     transf_cnt<=0;
+     crcDat_rst<=1;
+     crcDat_en<=0;
+     crcDat_in<=0; 
+     
+    
+  end  
+      
+  endcase
+  
+  
+end
+
+
+
+
+always @ (posedge sdClk) begin
+  
+  case (dataState)
+  IDLE: begin
+     
+
+
+  end
+  WRITE_FLASH: begin
+    flash_write_cnt<=flash_write_cnt+1;
+     CardStatus[12:9] <= `PRG;
+    if (flash_write_cnt == 0)
+      datOut<=1;
+    else if(flash_write_cnt == 1)
+     datOut[0]<=1;
+     else if(flash_write_cnt == 2)
+     datOut[0]<=0;
+    else if ((flash_write_cnt > 2) && (flash_write_cnt < 7)) begin
+      if (crc_ok) 
+        datOut[0] <=okcrctoken[6-flash_write_cnt];
+      else
+        datOut[0] <= invalidcrctoken[6-flash_write_cnt];
+    end
+    else if  ((flash_write_cnt >= 7) && (flash_write_cnt < 264)) begin
+       datOut[0]<=0;
+       datOut[1]<=1;
+       datOut[2]<=1;
+       datOut[3]<=1;
+      flash_blockwrite_cnt<=flash_blockwrite_cnt+2;
+       FLASHmem[BlockAddr+(flash_blockwrite_cnt)]<=Inbuff[flash_blockwrite_cnt];
+       FLASHmem[BlockAddr+(flash_blockwrite_cnt+1)]<=Inbuff[flash_blockwrite_cnt+1];
+    end
+    else begin
+      datOut<=1;      
+      InbuffStatus<=0;
+      CardStatus[12:9] <= `TRAN;
+    end  
+  end
+endcase
+end
+
 integer sdModel_file_desc;
+
 initial
 begin
   sdModel_file_desc = $fopen("log/sd_model.log");
   if (sdModel_file_desc < 2)
   begin
-    $display("*E Could not open/create testbench log file in ../log/ directory!");
+    $display("*E Could not open/create testbench log file in /log/ directory!");
     $finish;
   end
 end
 
 task ResetCard; //  MAC registers
 begin
-  cardIdentificationState<=1;
+ cardIdentificationState<=1;
   state<=IDLE;
+  dataState<=DATA_IDLE;
   Busy<=0;
   oeCmd<=0;
   crcCnt<=0;
+  CardTransferActive<=0;
   qCmd<=1;
   oeDat<=0;
   cmdOut<=0;
   cmdWrite<=0;
+  
+  InbuffStatus<=0;
   datOut<=0;
   inCmd<=0;
+  BusWidth<=1;
   responseType=0;
   crcIn<=0;
   response_S<=0;
@@ -394,6 +702,19 @@ begin
   CID<=`CIDSTART;
   response_CMD<=0;
   outDelayCnt<=0;
+  crcDat_rst<=1;
+  crcDat_en<=0;
+  crcDat_in<=0; 
+  transf_cnt<=0;
+  BlockAddr<=0;
+  block_cnt <=0;     
+     wptr<=0;
+     transf_cnt<=0;
+     crcDat_rst<=1;
+     crcDat_en<=0;
+     crcDat_in<=0; 
+     flash_write_cnt<=0;
+flash_blockwrite_cnt<=0;
 end
 endtask  
   
