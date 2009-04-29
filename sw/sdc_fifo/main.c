@@ -507,7 +507,7 @@ void Start()
 	 volatile int i;
 	 
 	 for (i=0;i<512;i++)
-	    MMCWRData[i]=0xff;
+	    MMCWRData[i]=i;
 	
 	uart_init();
 	a=mmc_init();
