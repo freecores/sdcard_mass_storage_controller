@@ -114,7 +114,7 @@ wire [15:0] crcDat_out [3:0];
 genvar i;
 generate
 for(i=0; i<4; i=i+1) begin:CRC_16_gen
-  SD_CRC_16 CRC_16_i (crcDat_in[i],crcDat_en, sd_Clk, crcDat_rst, crcDat_out[i]);
+  SD_CRC_16 CRC_16_i (crcDat_in[i],crcDat_en, sdClk, crcDat_rst, crcDat_out[i]);
 end
 endgenerate  
 SD_CRC_7 CRC_7( 
@@ -582,7 +582,7 @@ always @ (posedge sdClk) begin
        crcDat_en<=0;  
        last_din <=dat; 
        
-       if (transf_cnt> `BIT_BLOCK_REC-1) begin       
+       if (transf_cnt> `BIT_BLOCK_REC) begin       
         crc_c<=crc_c-1;
                                 
           if (crcDat_out[0][crc_c] != last_din[0])
@@ -630,16 +630,15 @@ always @ (posedge sdClk) begin
     if (flash_write_cnt == 0)
       datOut<=1;
     else if(flash_write_cnt == 1)
-     datOut[0]<=1;
-     else if(flash_write_cnt == 2)
      datOut[0]<=0;
-    else if ((flash_write_cnt > 2) && (flash_write_cnt < 7)) begin
+     
+    else if ((flash_write_cnt > 1) && (flash_write_cnt < 6)) begin
       if (crc_ok) 
-        datOut[0] <=okcrctoken[6-flash_write_cnt];
+        datOut[0] <=okcrctoken[5-flash_write_cnt];
       else
-        datOut[0] <= invalidcrctoken[6-flash_write_cnt];
+        datOut[0] <= invalidcrctoken[5-flash_write_cnt];
     end
-    else if  ((flash_write_cnt >= 7) && (flash_write_cnt < 264)) begin
+    else if  ((flash_write_cnt >= 6) && (flash_write_cnt < 263)) begin
        datOut[0]<=0;
        datOut[1]<=1;
        datOut[2]<=1;
