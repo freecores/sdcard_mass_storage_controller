@@ -1,4 +1,4 @@
-`include "SD_defines.v"
+`include "sd_defines.v"
 //-------------------------
 //-------------------------
 module sd_cmd_phy ( 
