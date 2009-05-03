@@ -102,6 +102,16 @@ reg     `WB_DATA_TYPE wb_memory [0:1048575]; // WB memory - 20 addresses connect
 reg     `WB_DATA_TYPE mem_wr_data_out;
 reg     `WB_DATA_TYPE mem_rd_data_in;
 
+initial $readmemh("wb_memory.txt",wb_memory);
+
+integer k;
+initial begin
+	$display("Contents of Mem after reading data file:");
+	for (k=0; k<10; k=k+1) $display("%d:%h",k,wb_memory[k]);
+end
+
+
+
 /*------------------------------------------------------------------------------------------------------
 Maximum values for WAIT and RETRY counters and which response !!!
 ------------------------------------------------------------------------------------------------------*/
@@ -114,7 +124,7 @@ always@(RST_I)
 begin
   if (RST_I)
   begin
-    a_e_r_resp <= 3'b000; // do not respond
+    a_e_r_resp <= 3'b100; // do not respond
     wait_cyc   <= 4'b0; // no wait cycles
     max_retry  <= 8'h0; // no retries
   end

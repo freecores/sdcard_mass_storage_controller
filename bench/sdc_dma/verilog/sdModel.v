@@ -5,6 +5,7 @@
 `define tISU 6 //Input setup time
 `define tIH 0 //Input hold time
 `define tODL 14 //Output delay
+`define DLY_TO_OUTP 47 
 
 `define BLOCKSIZE 512
 `define MEMSIZE 2048 // 4 block
@@ -150,8 +151,7 @@ initial begin
   qCmd<=1;
   oeDat<=0;
   cmdOut<=0;
-  cmdWrite<=0;
-  
+  cmdWrite<=0;  
   InbuffStatus<=0;
   datOut<=0;
   inCmd<=0;
@@ -177,13 +177,13 @@ initial begin
   transf_cnt<=0;
   BlockAddr<=0;
   block_cnt <=0;     
-     wptr<=0;
-     transf_cnt<=0;
-     crcDat_rst<=1;
-     crcDat_en<=0;
-     crcDat_in<=0; 
-     flash_write_cnt<=0;
-flash_blockwrite_cnt<=0;
+  wptr<=0;
+  transf_cnt<=0;
+  crcDat_rst<=1;
+  crcDat_en<=0;
+  crcDat_in<=0; 
+  flash_write_cnt<=0;
+  flash_blockwrite_cnt<=0;
 end
 
 //CARD logic
@@ -224,7 +224,7 @@ READ_CMD: begin
  endcase
 end
 
-always @ (dataState or CardStatus or crc_c or flash_write_cnt or q_start_bit)
+always @ (dataState or CardStatus or crc_c or flash_write_cnt or dat[0] )
 begin : FSM_COMBODAT
  next_datastate  = 0;   
 case(dataState)  
@@ -238,7 +238,7 @@ case(dataState)
  end  
   
  READ_WAITS: begin
-   if (q_start_bit == 1'b0 ) 
+   if ( dat[0] == 1'b0 ) 
      next_datastate =  READ_DATA;
    else
      next_datastate =  READ_WAITS; 
@@ -255,9 +255,13 @@ case(dataState)
      next_datastate =  DATA_IDLE;
   else
      next_datastate =  WRITE_FLASH;
-    
-     
-end
+end  
+  WRITE_DATA : begin   
+    if (transf_cnt >= `BIT_BLOCK) 
+       next_datastate= DATA_IDLE;  
+    else 
+       next_datastate=WRITE_DATA;   
+  end
 
  
  
@@ -314,7 +318,7 @@ always @ (posedge sdClk) begin
       crcEn<=0;
       crcRst<=1;
       oeCmd<=0;
-      oeDat<=0;
+     
       cmdRead<=0;
       appendCrc<=0;
       ValidCmd<=0;
@@ -438,10 +442,26 @@ always @ (posedge sdClk) begin
           response_CMD[127:96] <= CardStatus ;         
                 
         end 
-        17 : response_CMD[127:96]<= 48;
+        17 :  begin
+          if (outDelayCnt==0) begin 
+            if (CardStatus[12:9] == `TRAN) begin //If card is in transferstate                               
+                CardStatus[12:9] <=`DATAS;//Put card in data state
+                response_CMD[127:96] <= CardStatus ;
+                BlockAddr = inCmd[39:8];
+                if (BlockAddr%512 !=0)
+                  $display("**Block Misalign Error");         
+          end
+           else begin
+             response_S <= 0;
+             response_CMD[127:96] <= 0; 
+           end
+         end
+    
+       end 
+        
         24 : begin
           if (outDelayCnt==0) begin 
-            if (CardStatus[12:9] == 4) begin //If card is in transferstate
+            if (CardStatus[12:9] == `TRAN) begin //If card is in transferstate
               if (CardStatus[8]) begin //If Free write buffer           
                 CardStatus[12:9] <=`RCV;//Put card in Rcv state
                 response_CMD[127:96] <= CardStatus ;
@@ -545,11 +565,21 @@ SEND_CMD: begin
  endcase
 end
 
+
+
+integer outdly_cnt;
+
+
+
+
+
+
+
 always @ (posedge sdClk) begin
   
   case (dataState)
   DATA_IDLE: begin
-      oeDat<=0;
+      
   end
   
   READ_WAITS: begin
@@ -576,6 +606,8 @@ always @ (posedge sdClk) begin
        if (wptr)
          block_cnt<=block_cnt+1;     
        wptr<=~wptr;
+       
+       
     end
     else if  ( transf_cnt <= (`BIT_BLOCK_REC +`BIT_CRC_CYCLE-1)) begin
        transf_cnt<=transf_cnt+1; 
@@ -615,34 +647,110 @@ end
 
 
 
-
-always @ (posedge sdClk) begin
+reg data_send_index;
+integer write_out_index;
+always @ (negedge sdClk) begin
   
   case (dataState)
-  IDLE: begin
+  DATA_IDLE: begin
+     write_out_index<=0;
+     transf_cnt<=0;
+     data_send_index<=0; 
+     outdly_cnt<=0;
      
-
-
   end
+  
+  
+   WRITE_DATA: begin
+      oeDat<=1;
+      outdly_cnt<=outdly_cnt+1;
+     
+      if ( outdly_cnt > `DLY_TO_OUTP) begin
+         transf_cnt <= transf_cnt+1;
+         crcDat_en<=1;
+         crcDat_rst<=0;
+         
+      end   
+      else begin
+         crcDat_en<=0;
+         crcDat_rst<=1;          
+          oeDat<=1;   
+          crc_c<=15; 
+     end   
+      
+       if (transf_cnt==1) begin  
+               
+          last_din <= FLASHmem[BlockAddr+(write_out_index)][7:4];           
+          datOut<=0;
+          crcDat_in<= FLASHmem[BlockAddr+(write_out_index)][7:4];  
+          data_send_index<=1;    
+        end
+        else if ( (transf_cnt>=2) && (transf_cnt<=`BIT_BLOCK-`CRC_OFF )) begin                 
+          data_send_index=~data_send_index;
+          if (!data_send_index) begin
+             last_din<=FLASHmem[BlockAddr+(write_out_index)][7:4];
+             crcDat_in<= FLASHmem[BlockAddr+(write_out_index)][7:4];
+          end
+          else begin
+             last_din<=FLASHmem[BlockAddr+(write_out_index)][3:0];
+             crcDat_in<= FLASHmem[BlockAddr+(write_out_index)][3:0];
+             write_out_index<=write_out_index+1;
+         end       
+                                
+          datOut<= last_din; 
+                      
+                    
+          if ( transf_cnt >=`BIT_BLOCK-`CRC_OFF ) begin
+             crcDat_en<=0;             
+         end
+         
+       end
+       else if (transf_cnt>`BIT_BLOCK-`CRC_OFF & crc_c!=0) begin
+         crcDat_en<=0;
+         crc_c<=crc_c-1;         
+         datOut[0]<=crcDat_out[0][crc_c-1];
+         datOut[1]<=crcDat_out[1][crc_c-1];
+         datOut[2]<=crcDat_out[2][crc_c-1];
+         datOut[3]<=crcDat_out[3][crc_c-1];         
+       end
+       else if (transf_cnt==`BIT_BLOCK-2) begin     
+          datOut<=4'b1111;          
+      end   
+       else if ((transf_cnt !=0) && (crc_c == 0 ))begin
+         oeDat<=0; 
+         CardStatus[12:9] <= `TRAN;
+         end
+      
+      
+      
+  end
+  
+  
+  
   WRITE_FLASH: begin
     flash_write_cnt<=flash_write_cnt+1;
      CardStatus[12:9] <= `PRG;
-    if (flash_write_cnt == 0)
-      datOut<=1;
-    else if(flash_write_cnt == 1)
-     datOut[0]<=0;
-     
-    else if ((flash_write_cnt > 1) && (flash_write_cnt < 6)) begin
-      if (crc_ok) 
-        datOut[0] <=okcrctoken[5-flash_write_cnt];
-      else
-        datOut[0] <= invalidcrctoken[5-flash_write_cnt];
-    end
-    else if  ((flash_write_cnt >= 6) && (flash_write_cnt < 263)) begin
-       datOut[0]<=0;
+      datOut[0]<=0;
        datOut[1]<=1;
        datOut[2]<=1;
        datOut[3]<=1;
+    if (flash_write_cnt == 0)
+      datOut<=1;
+    else if(flash_write_cnt == 1)
+     datOut[0]<=1;
+    else if(flash_write_cnt == 2)
+     datOut[0]<=0;
+      
+     
+    else if ((flash_write_cnt > 2) && (flash_write_cnt < 7)) begin
+      if (crc_ok) 
+        datOut[0] <=okcrctoken[6-flash_write_cnt];
+      else
+        datOut[0] <= invalidcrctoken[6-flash_write_cnt];
+    end
+    else if  ((flash_write_cnt >= 7) && (flash_write_cnt < 264)) begin
+       datOut[0]<=0;
+      
       flash_blockwrite_cnt<=flash_blockwrite_cnt+2;
        FLASHmem[BlockAddr+(flash_blockwrite_cnt)]<=Inbuff[flash_blockwrite_cnt];
        FLASHmem[BlockAddr+(flash_blockwrite_cnt+1)]<=Inbuff[flash_blockwrite_cnt+1];
@@ -712,7 +820,7 @@ begin
      crcDat_rst<=1;
      crcDat_en<=0;
      crcDat_in<=0; 
-     flash_write_cnt<=0;
+flash_write_cnt<=0;
 flash_blockwrite_cnt<=0;
 end
 endtask  
