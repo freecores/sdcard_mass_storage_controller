@@ -221,7 +221,7 @@ WB_SLAVE_BEHAVIORAL wb_slave
     .CYC_I(wbm_sdm_cyc_o),
     .DAT_O(wbm_sdm_dat_i),
     .DAT_I(wbm_sdm_dat_o),
-    .ERR_O(wbm_sdm_dat_o),
+    .ERR_O(),
     .RTY_O(),      // NOT USED for now!
     .SEL_I(wbm_sdm_sel_o),
     .STB_I(wbm_sdm_stb_o),
@@ -276,8 +276,8 @@ WB_BUS_MON wb_eth_master_bus_mon
   .ACK_I(wbm_sdm_ack_i),
   .ADDR_O(wbm_sdm_adr_o),
   .CYC_O(wbm_sdm_cyc_o),
-  .DAT_I(wbm_sdm_dat_o),
-  .DAT_O(wbm_sdm_dat_i),
+  .DAT_I(wbm_sdm_dat_i),
+  .DAT_O(wbm_sdm_dat_o),
   .ERR_I(0),
   .RTY_I(1'b0),
   .SEL_O(wbm_sdm_sel_o),
@@ -815,7 +815,10 @@ begin
         wbm_write(addr, data, 4'hF, 1, wbm_init_waits, wbm_subseq_waits);
         
 
-        addr = `SD_BASE + `BD_ISR  ;         
+        addr = `SD_BASE + `BD_ISR  ;  
+        data=0;
+        
+        wbm_write(addr, data, 4'hF, 1, wbm_init_waits, wbm_subseq_waits);       
         wbm_read(addr, resp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
         
         	while (  resp_data[0]  !=1   ) begin

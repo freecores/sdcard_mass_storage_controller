@@ -58,7 +58,7 @@ reg [31:0] OCR;
 reg [120:0] CID;
 reg Busy; //0 when busy
 wire [6:0] crcOut;
-reg [3:0] crc_c;
+reg [4:0] crc_c;
 
 reg [3:0] CurrentState; 
 reg [3:0] DataCurrentState; 
@@ -672,10 +672,10 @@ always @ (negedge sdClk) begin
          
       end   
       else begin
-         crcDat_en<=0;
-         crcDat_rst<=1;          
-          oeDat<=1;   
-          crc_c<=15; 
+        crcDat_en<=0;
+        crcDat_rst<=1;          
+        oeDat<=1;   
+        crc_c<=16; 
      end   
       
        if (transf_cnt==1) begin  
@@ -686,7 +686,7 @@ always @ (negedge sdClk) begin
           data_send_index<=1;    
         end
         else if ( (transf_cnt>=2) && (transf_cnt<=`BIT_BLOCK-`CRC_OFF )) begin                 
-          data_send_index=~data_send_index;
+          data_send_index<=~data_send_index;
           if (!data_send_index) begin
              last_din<=FLASHmem[BlockAddr+(write_out_index)][7:4];
              crcDat_in<= FLASHmem[BlockAddr+(write_out_index)][7:4];
@@ -706,12 +706,15 @@ always @ (negedge sdClk) begin
          
        end
        else if (transf_cnt>`BIT_BLOCK-`CRC_OFF & crc_c!=0) begin
+         datOut<= last_din; 
          crcDat_en<=0;
-         crc_c<=crc_c-1;         
+         crc_c<=crc_c-1; 
+         if (crc_c<= 16) begin         
          datOut[0]<=crcDat_out[0][crc_c-1];
          datOut[1]<=crcDat_out[1][crc_c-1];
          datOut[2]<=crcDat_out[2][crc_c-1];
-         datOut[3]<=crcDat_out[3][crc_c-1];         
+         datOut[3]<=crcDat_out[3][crc_c-1];       
+       end  
        end
        else if (transf_cnt==`BIT_BLOCK-2) begin     
           datOut<=4'b1111;          
