@@ -10,7 +10,7 @@ module SD_CLOCK_DIVIDER (
   reg SD_CLK_O;
 `ifdef SYN
   `ifdef ACTEL
-  CLKINT CLKINT0
+  CLKINT CLKA
   (.A (SD_CLK_O),
    .Y (SD_CLK) 
    );
