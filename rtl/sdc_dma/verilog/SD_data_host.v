@@ -59,7 +59,7 @@ endgenerate
 reg ack_transfer_int;
 reg ack_q;
 always @ (posedge sd_clk or posedge rst   )
-begin
+begin: ACK_SYNC
 if (rst) begin
   ack_transfer_int <=0;
   ack_q<=0;end
@@ -129,7 +129,7 @@ case(state)
 end 
 
 always @ (posedge sd_clk or posedge rst   )
- begin 
+ begin :START_SYNC
   if (rst ) begin
     q_start_bit<=1;
  end 
@@ -158,7 +158,7 @@ reg out_buff_ptr,in_buff_ptr;
 reg [2:0] data_send_index;
          
 always @ (negedge sd_clk or posedge rst   )
-begin  
+begin  : FSM_OUT
  if (rst) begin
    DAT_oe_o<=0;
    crc_en<=0;
@@ -202,7 +202,7 @@ begin
    end
    WRITE_DAT: begin    
       transm_complete <=0;  
-       busy_n<=0;
+      busy_n<=0;
       crc_ok<=0;
       transf_cnt<=transf_cnt+1; 
        rd<=0; 
@@ -318,13 +318,7 @@ begin
             
        busy_int<=DAT_dat_i[0];
     
-        `ifdef SIM
-          crc_ok<=1;
-       `endif
-       /* `ifdef  NO_CRC_CHECK_ON_WRITE_DATA
-           crc_ok<=1;
-        `endif
-        */
+      
    end
    READ_WAIT:begin
       DAT_oe_o<=0;

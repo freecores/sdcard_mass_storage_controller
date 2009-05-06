@@ -1,4 +1,5 @@
 `include "SD_defines.v"
+`include "timescale.v"
 module SD_FIFO_RX_FILLER
 ( 
 input clk,
@@ -47,6 +48,7 @@ sd_rx_fifo Rx_Fifo (
 reg [8:0] offset;
 assign  m_wb_adr_o = adr+offset;
 //assign  m_wb_dat_o = dat_o;
+
 reg ackd;
 always @(posedge clk or posedge rst )begin
 
@@ -66,10 +68,10 @@ always @(posedge clk or posedge rst )begin
   if (!empty & ackd) begin
     rd<=1;
     
-    m_wb_dat_o<=dat_o;
-    m_wb_we_o <=1;
-		m_wb_cyc_o <= 1;
-		m_wb_stb_o <= 1; 
+    m_wb_dat_o<=#1 dat_o;
+    m_wb_we_o <=#1 1;
+		m_wb_cyc_o <=#1 1;
+		m_wb_stb_o <=#1 1; 
     ackd<=0;
    
   end

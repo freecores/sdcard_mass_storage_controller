@@ -1,4 +1,5 @@
 `include "SD_defines.v"
+`include "timescale.v"
 module SD_FIFO_TX_FILLER
 ( 
 input clk,
@@ -85,7 +86,6 @@ always @(posedge clk or posedge rst )begin
 		  m_wb_stb_o <= 0; 
 		  delay<=~ delay;   
 		end 
-
 		else begin
 			wr_tx <=0;
 			
@@ -93,10 +93,11 @@ always @(posedge clk or posedge rst )begin
 	 
 	  if (delay)begin
 	     offset<=offset+`MEM_OFFSET;	
-	     ackd<=ackd+1;
+	     ackd<=~ackd;
 	     delay<=~ delay;
-	     	wr_tx <=0; 
-	     end
+	     wr_tx <=0; 
+	  end
+	  
 		if ( !m_wb_ack_i & !fe & ackd  ) begin //If not full And no Ack  
 		        m_wb_we_o <=0;
 			m_wb_cyc_o <= 1;

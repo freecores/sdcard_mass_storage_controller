@@ -4,14 +4,14 @@ module SD_DATA_MASTER (
   input clk,
   input rst,
   //Tx Bd
-  input new_tx_bd,
+ 
   input [`RAM_MEM_WIDTH-1:0] dat_in_tx,
   input [`BD_WIDTH-1:0] free_tx_bd,
   input ack_i_s_tx,
   output reg re_s_tx,
   output reg a_cmp_tx,
   //Rx Bd
-  input new_rx_bd,
+
   input [`RAM_MEM_WIDTH-1:0] dat_in_rx,
   input [`BD_WIDTH-1:0] free_rx_bd,
   input ack_i_s_rx,
@@ -41,8 +41,8 @@ module SD_DATA_MASTER (
   input crc_ok,
   output reg ack_transfer, 
   //status output
-  output reg  [7:0] bd_int_st ,
-  input bd_int_st_rst,
+  output reg  [7:0] Dat_Int_Status ,
+  input Dat_Int_Status_rst,
   output reg  CIDAT
   
     
@@ -238,7 +238,7 @@ begin
       a_cmp_tx<=0;           
       a_cmp_rx<=0;
       CIDAT<=0;
-      bd_int_st<=0;
+      Dat_Int_Status<=0;
       we_req<=0;
       re_s_tx<=0;
       re_s_rx<=0;
@@ -394,7 +394,7 @@ begin
                     rec_done<=1;
                 else begin
                     rec_failed<=1;
-                    bd_int_st[4] <=1; 
+                    Dat_Int_Status[4] <=1; 
                        start_tx_fifo<=0;  
                 end 
                 `endif  
@@ -423,13 +423,13 @@ begin
        CIDAT<=1;
      if (tx_cycle) begin 
       if (tx_empt) begin
-         bd_int_st[2] <=1;
+         Dat_Int_Status[2] <=1;
          trans_failed<=1;  
        end
      end
      else begin 
        if (rx_full) begin
-         bd_int_st[2] <=1; 
+         Dat_Int_Status[2] <=1; 
          trans_failed<=1; 
       end
     end            
@@ -439,12 +439,12 @@ begin
          ack_transfer<=1;
         
          if ((!crc_ok) && (busy_n))  begin //Wrong CRC and Data line free.
-            bd_int_st[5] <=1; 
+            Dat_Int_Status[5] <=1; 
             trans_failed<=1;
          end 
          else if ((crc_ok) && (busy_n)) begin //Data Line free
            trans_done <=1;           
-           bd_int_st[0]<=1;
+           Dat_Int_Status[0]<=1;
            if (tx_cycle)
             a_cmp_tx<=1;
            else
@@ -471,7 +471,7 @@ begin
    STOP_SEND: begin
       resend_try_cnt=resend_try_cnt+1;
       if (resend_try_cnt==`RESEND_MAX_CNT)
-          bd_int_st[1]<=1;
+          Dat_Int_Status[1]<=1;
       if (!cmd_busy) 
          we_req <= 1;      
       if (we_ack)      
@@ -497,8 +497,8 @@ begin
     end 
   
   endcase  
-  if (bd_int_st_rst)
-    bd_int_st<=0;
+  if (Dat_Int_Status_rst)
+    Dat_Int_Status<=0;
  end 
   
 end  

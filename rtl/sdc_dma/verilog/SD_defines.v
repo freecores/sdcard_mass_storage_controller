@@ -9,7 +9,7 @@
 //`define IRQ_ENABLE
 `define ACTEL
 
-//`define CUSTOM
+`define CUSTOM
 //`define ALTERA
 //`define XLINX
 //`define SIMULATOR
@@ -26,10 +26,18 @@
   
 `endif
 
+   `ifdef CUSTOM
+   `define NR_O_BD_4 
+   `define BD_WIDTH 4
+   `define BD_SIZE 16       
+   `define RAM_MEM_WIDTH_16
+   `define RAM_MEM_WIDTH 16
+`endif
+
 `define RESEND_MAX_CNT 3
 
 `ifdef SYN
-  `define RESET_CLK_DIV 2
+  `define RESET_CLK_DIV 0
   `define MEM_OFFSET 4
 `endif
 
