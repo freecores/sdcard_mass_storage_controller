@@ -198,7 +198,7 @@ end
   //----
     	 
 always @ (posedge SD_CLK_IN or posedge RST_IN or posedge GO_IDLE)
-begin
+begin : REQ_SYNC
 	if  (RST_IN || GO_IDLE) begin
 		Req_internal_in <=1'b0;
 		q <=1'b0;
@@ -212,7 +212,7 @@ begin
 end
 
 always @ (posedge SD_CLK_IN or posedge RST_IN or posedge GO_IDLE)
-begin
+begin ACK_SYNC
 	if  (RST_IN || GO_IDLE) begin
 		Ack_internal_in <=1'b0;
 		q1 <=1'b0;
@@ -295,7 +295,7 @@ end
 
 //-------------OUTPUT_LOGIC-------
 always @ (posedge SD_CLK_IN or posedge RST_IN or posedge GO_IDLE   )
-begin : OUTPUT_LOGIC
+begin : FSM_OUT
  if (RST_IN || GO_IDLE ) begin    
     CRC_Enable=0;
     word_select_counter<=0;
