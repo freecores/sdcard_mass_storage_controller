@@ -1,4 +1,47 @@
 `include "SD_defines.v"
+//////////////////////////////////////////////////////////////////////
+////                                                                    ////
+////  SD_conttollrt_top.v                                                   ////
+////                                                                          ////
+////  This file is part of the Ethernet IP core project                        ////
+////  http://www.opencores.org/?do=project&who=sdcard_mass_storage_controller  ////
+////                                                                           ////
+////  Author(s):                                                            ////
+////      - Adam Edvardsson (igorM@opencores.org)                       ////
+////                                                                 ////
+////  All additional information is avaliable in the Readme.txt   ////
+////  file.                                                       ////
+////                                                              ////
+//////////////////////////////////////////////////////////////////////
+////                                                              ////
+//// Copyright (C) 2009 Authors                                   ////
+////                                                              ////
+//// This source file may be used and distributed without         ////
+//// restriction provided that this copyright statement is not    ////
+//// removed from the file and that any derivative work contains  ////
+//// the original copyright notice and the associated disclaimer. ////
+////                                                              ////
+//// This source file is free software; you can redistribute it   ////
+//// and/or modify it under the terms of the GNU Lesser General   ////
+//// Public License as published by the Free Software Foundation; ////
+//// either version 2.1 of the License, or (at your option) any   ////
+//// later version.                                               ////
+////                                                              ////
+//// This source is distributed in the hope that it will be       ////
+//// useful, but WITHOUT ANY WARRANTY; without even the implied   ////
+//// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR      ////
+//// PURPOSE.  See the GNU Lesser General Public License for more ////
+//// details.                                                     ////
+////                                                              ////
+//// You should have received a copy of the GNU Lesser General    ////
+//// Public License along with this source; if not, download it   ////
+//// from http://www.opencores.org/lgpl.shtml                     ////
+////                                                              ////
+//////////////////////////////////////////////////////////////////////
+
+
+
+
 module SD_CONTROLLER_TOP(
   
   // WISHBONE common
@@ -103,8 +146,7 @@ wire[7:0] Bd_isr_enable_reg;
 wire [`RAM_MEM_WIDTH-1:0] dat_out_m_rx_bd; //Data out from Rx_bd to Master
 wire [`BD_WIDTH-1 :0] free_bd_rx_bd; //NO free Rx_bd
 wire new_rx_bd;  // New Bd writen
-reg re_s_rx_bd; // Read enable Slave side Rx_bd
-reg a_cmp_rx_bd; //A Completed transmison of a Bd
+
 wire [`RAM_MEM_WIDTH-1:0] dat_out_s_rx_bd; //Data out from Rx_bd to Slave
 
 //Tx Buffer Descriptor internal signals
@@ -113,8 +155,7 @@ wire [`RAM_MEM_WIDTH-1:0] dat_in_m_tx_bd;
 wire [`RAM_MEM_WIDTH-1:0] dat_out_m_tx_bd;
 wire [`BD_WIDTH-1 :0] free_bd_tx_bd;
 wire new_tx_bd;
-reg re_s_tx_bd;
-reg a_cmp_tx_bd;
+
 wire [`RAM_MEM_WIDTH-1:0] dat_out_s_tx_bd;
 
 wire [7:0] bd_int_st_w; //Wire to BD status register
@@ -253,8 +294,8 @@ SD_DATA_MASTER data_master_1
 .cmd_set ( cmd_set_s),
 .cmd_tsf_err (normal_int_status_reg[15]) ,
 .card_status (cmd_resp_1[12:8])   ,
-.start_tx_fifo (start_w),
-.start_rx_fifo (start_r),
+.start_tx_fifo (start_tx_fifo),
+.start_rx_fifo(start_rx_fifo),
 .sys_adr (sys_adr),
 .tx_empt (tx_e ),
 .tx_full (tx_f ),
@@ -297,9 +338,9 @@ SD_Bd rx_bd
 .dat_out_m (dat_out_m_rx_bd),
 .free_bd (free_bd_rx_bd),
 
-.re_s (re_s_rx_bd),
+.re_s (re_s_rx_bd_w),
 .ack_o_s (ack_o_s_rx),
-.a_cmp (a_cmp_rx_bd),
+.a_cmp (a_cmp_rx_bd_w),
 .dat_out_s (dat_out_s_rx_bd)
 
 );
@@ -315,8 +356,8 @@ SD_Bd tx_bd
 .free_bd (free_bd_tx_bd),
 
 .ack_o_s (ack_o_s_tx),
-.re_s (re_s_tx_bd),
-.a_cmp (a_cmp_tx_bd),
+.re_s (re_s_tx_bd_w),
+.a_cmp (a_cmp_tx_bd_w),
 .dat_out_s (dat_out_s_tx_bd)
 
 );
@@ -333,7 +374,7 @@ SD_FIFO_TX_FILLER FIFO_filer_tx (
 .m_wb_cyc_o (m_wb_cyc_o_tx),
 .m_wb_stb_o (m_wb_stb_o_tx),
 .m_wb_ack_i ( m_wb_ack_i),
-.en (start_w),
+.en (start_tx_fifo),
 .adr (sys_adr),
 .sd_clk (sd_clk_o),
 .dat_o (data_out_tx_fifo   ),
@@ -352,7 +393,7 @@ SD_FIFO_RX_FILLER FIFO_filer_rx (
 .m_wb_cyc_o (m_wb_cyc_o_rx),
 .m_wb_stb_o (m_wb_stb_o_rx),
 .m_wb_ack_i ( m_wb_ack_i),
-.en (start_r),
+.en (start_rx_fifo),
 .adr (sys_adr),
 .sd_clk (sd_clk_o),
 .dat_i (data_in_rx_fifo   ),
@@ -414,11 +455,11 @@ SD_CONTROLLER_WB SD_CONTROLLER_WB0
 
 
 //MUX For WB master acces granted to RX or TX FIFO filler
-assign m_wb_cyc_o = start_w ? m_wb_cyc_o_tx :start_r ?m_wb_cyc_o_rx: 0;
-assign m_wb_stb_o = start_w ? m_wb_stb_o_tx :start_r ?m_wb_stb_o_rx: 0;
+assign m_wb_cyc_o = start_tx_fifo ? m_wb_cyc_o_tx :start_rx_fifo ?m_wb_cyc_o_rx: 0;
+assign m_wb_stb_o = start_tx_fifo ? m_wb_stb_o_tx :start_rx_fifo ?m_wb_stb_o_rx: 0;
 //assign m_wb_dat_o = m_wb_dat_o_rx;
-assign m_wb_we_o = start_w ? m_wb_we_o_tx :start_r ?m_wb_we_o_rx: 0;
-assign m_wb_adr_o = start_w ? m_wb_adr_o_tx :start_r ?m_wb_adr_o_rx: 0;
+assign m_wb_we_o = start_tx_fifo ? m_wb_we_o_tx :start_rx_fifo ?m_wb_we_o_rx: 0;
+assign m_wb_adr_o = start_tx_fifo ? m_wb_adr_o_tx :start_rx_fifo ?m_wb_adr_o_rx: 0;
 
 `ifdef IRQ_ENABLE
 assign int_a =normal_int_status_reg &  normal_int_signal_enable_reg;
@@ -426,35 +467,26 @@ assign int_b = error_int_status_reg & error_int_signal_enable_reg;
 assign int_c =  Bd_isr_reg & Bd_isr_enable_reg;
 `endif
 
-always @ (re_s_tx_bd_w or a_cmp_tx_bd_w or  re_s_rx_bd_w or a_cmp_rx_bd_w or write_req_s) begin
-  re_s_tx_bd<=re_s_tx_bd_w;
-  a_cmp_tx_bd <=a_cmp_tx_bd_w;
-  re_s_rx_bd <=re_s_rx_bd_w; 
-  a_cmp_rx_bd<=a_cmp_rx_bd_w;
-end
+
 
 //Set Bd_Status_reg
-always @ ( free_bd_tx_bd or free_bd_rx_bd ) begin
+always @ (wb_clk_i ) begin
   Bd_Status_reg[15:8]=free_bd_rx_bd;
   Bd_Status_reg[7:0]=free_bd_tx_bd;
+  cmd_resp_1<= cmd_resp_1_w;
+  normal_int_status_reg<= normal_int_status_reg_w  ;
+  error_int_status_reg<= error_int_status_reg_w  ;
+  status_reg[0]<= status_reg_busy;
+   status_reg[15:1]<=  status_reg_w[15:1]; 
+   status_reg[1] <= cidat_w; 
+   Bd_isr_reg<=bd_int_st_w;
+
 end
 
-always @( cmd_resp_1_w  or error_int_status_reg_w or normal_int_status_reg_w ) begin
-cmd_resp_1<= cmd_resp_1_w;
-normal_int_status_reg<= normal_int_status_reg_w  ;
-error_int_status_reg<= error_int_status_reg_w  ;
-end  
 
-always @ ( cidat_w or cmd_int_busy or status_reg_w or status_reg_busy or bd_int_st_w) begin
- status_reg[0]<= status_reg_busy;
- status_reg[15:1]<=  status_reg_w[15:1]; 
- status_reg[1] <= cidat_w; 
- Bd_isr_reg<=bd_int_st_w;
-end
  
 //cmd_int_busy is set when an internal access to the CMD buss is granted then immidetly uppdate the status busy bit to prevent buss access to cmd
 assign status_reg_busy = cmd_int_busy ? 1'b1: status_reg_w[0];
- 
 
 
 

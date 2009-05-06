@@ -77,8 +77,8 @@ always @(posedge clk or posedge rst )begin
  end
  else if (en) begin //Start filling the TX buffer
     reset_tx_fifo<=0;
-	    if (m_wb_ack_i) begin 
-		  
+    
+	  if (m_wb_ack_i) begin 		  
 		  wr_tx <=1;
 		  din <=m_wb_dat_i;	
 		  					
@@ -99,7 +99,7 @@ always @(posedge clk or posedge rst )begin
 	  end
 	  
 		if ( !m_wb_ack_i & !fe & ackd  ) begin //If not full And no Ack  
-		        m_wb_we_o <=0;
+		  m_wb_we_o <=0;
 			m_wb_cyc_o <= 1;
 			m_wb_stb_o <= 1; 
 			ackd<=0;   

@@ -49,7 +49,7 @@ reg [8:0] offset;
 assign  m_wb_adr_o = adr+offset;
 //assign  m_wb_dat_o = dat_o;
 
-reg ackd;
+reg wb_free;
 always @(posedge clk or posedge rst )begin
 
  if (rst) begin
@@ -57,30 +57,30 @@ always @(posedge clk or posedge rst )begin
   m_wb_we_o <=0;
 	m_wb_cyc_o <= 0;
 	m_wb_stb_o <= 0;
-	ackd<=1;
+	wb_free<=1;
 	m_wb_dat_o<=0;
 	rd<=0;
 	reset_rx_fifo<=1;
  end
- else if (en)  begin//Start filling the TX buffer
+ else if (en)  begin//Start filling the RX buffer
     rd<=0;
     reset_rx_fifo<=0;
-  if (!empty & ackd) begin
+  if (!empty & wb_free) begin
     rd<=1;
     
     m_wb_dat_o<=#1 dat_o;
     m_wb_we_o <=#1 1;
 		m_wb_cyc_o <=#1 1;
 		m_wb_stb_o <=#1 1; 
-    ackd<=0;
-   
+    wb_free<=0;   
   end
-  if(  !ackd & m_wb_ack_i) begin
+  
+  if(  !wb_free & m_wb_ack_i) begin
     m_wb_we_o <=0;
 		m_wb_cyc_o <= 0;
 		m_wb_stb_o <= 0;
 		offset<=offset+`MEM_OFFSET;
-		ackd<=1;
+		wb_free<=1;
 	end	 
 end
 else begin
@@ -90,7 +90,7 @@ else begin
     	m_wb_cyc_o <= 0;
 			m_wb_stb_o <= 0; 
 			m_wb_we_o <=0; 
-			ackd<=1;
+			wb_free<=1;
   end
 
 end  

@@ -212,7 +212,7 @@ begin : REQ_SYNC
 end
 
 always @ (posedge SD_CLK_IN or posedge RST_IN or posedge GO_IDLE)
-begin ACK_SYNC
+begin :ACK_SYNC
 	if  (RST_IN || GO_IDLE) begin
 		Ack_internal_in <=1'b0;
 		q1 <=1'b0;
