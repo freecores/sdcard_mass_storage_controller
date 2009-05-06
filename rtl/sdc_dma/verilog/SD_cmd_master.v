@@ -1,15 +1,13 @@
 `include "SD_defines.v"
 module SD_CMD_MASTER(
 input CLK_PAD_IO,
-input SD_CLK_I,
+
 input RST_PAD_I,
 input New_CMD,
 input data_write,
 input data_read,
 
-input cmd_dat_i,
-output cmd_out_o,
-output  cmd_oe_o,
+
 
 input [31:0]ARG_REG,
 input [15:0]CMD_SET_REG,
@@ -21,10 +19,25 @@ output reg [15:0] ERR_INT_REG,
 output reg [15:0] NORMAL_INT_REG, 
 input ERR_INT_RST,
 input NORMAL_INT_RST,
-input  [7:0] CLK_DIVIDER,
-output [1:0] st_dat_t
+
+output reg [15:0] settings,
+output reg go_idle_o,
+output reg  [39:0] cmd_out,
+output reg req_out,
+output reg ack_out,
+input req_in,
+input ack_in,
+input [39:0] cmd_in,
+input [15:0] serial_status
 );
-//
+ 
+  
+
+
+
+
+
+
 
 `define dat_ava status[6]
 `define crc_valid status[5] 
@@ -49,15 +62,12 @@ output [1:0] st_dat_t
 reg CRC_check_enable;
 reg index_check_enable;
 reg [6:0]response_size;
-reg go_idle_o;
-reg [15:0] settings;
-reg [39:0] cmd_out;
-reg req_out;
-reg ack_out;
-wire req_in;
-wire ack_in;
-wire [39:0] cmd_in;
-wire [15:0]serial_status;
+
+
+
+
+
+
 reg [15:0]status;
 reg [15:0]  Watchdog_Cnt;
 reg complete;
@@ -72,23 +82,6 @@ parameter SETUP   =  3'b010;
 parameter EXECUTE  =  3'b100;
 
 //---------------Input ports---------------
-SD_CMD_SERIAL_HOST CMD_SERIAL_HOST_1(
-  .SD_CLK_IN (SD_CLK_I), 
-  .RST_IN  (RST_PAD_I), 
-  .SETTING_IN (settings),
-  .GO_IDLE (go_idle_o), 
-  .CMD_IN (cmd_out),
-  .REQ_IN (req_out),
-  .ACK_IN (ack_out),
-  .REQ_OUT (req_in), 
-  .ACK_OUT (ack_in),
-  .CMD_OUT (cmd_in),
-  .STATUS (serial_status),
-  .cmd_dat_i  (cmd_dat_i),
-  .cmd_out_o (cmd_out_o),
-  .cmd_oe_o ( cmd_oe_o),
-  .st_dat_t (st_dat_t)
-);
 
 reg ack_in_int;
 reg ack_q;
