@@ -12,14 +12,14 @@ input re_m,
 input [`RAM_MEM_WIDTH-1:0] dat_in_m, 
 output reg [`RAM_MEM_WIDTH-1:0] dat_out_m,
 output reg [`BD_WIDTH-1 :0] free_bd,
-output reg new_bw,
+
 input  re_s,
 output reg ack_o_s,
 input a_cmp,
 output reg[`RAM_MEM_WIDTH-1:0] dat_out_s
 );
  
- 
+ reg new_bw;
 reg last_a_cmp;
  
 `ifdef RAM_MEM_WIDTH_32   
