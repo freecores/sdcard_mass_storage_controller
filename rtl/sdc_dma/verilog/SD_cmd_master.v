@@ -15,7 +15,7 @@ input [15:0] TIMEOUT_REG,
 output reg [15:0] STATUS_REG,
 output reg [31:0] RESP_1_REG,
 
-output reg [15:0] ERR_INT_REG, 
+output reg [4:0] ERR_INT_REG, 
 output reg [15:0] NORMAL_INT_REG, 
 input ERR_INT_RST,
 input NORMAL_INT_RST,

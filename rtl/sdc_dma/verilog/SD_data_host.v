@@ -1,7 +1,3 @@
-//-------------------------
-//-------------------------
-
-
 
 
 `include "SD_defines.v"
@@ -49,6 +45,7 @@ parameter READ_WAIT   = 6'b010000;
 parameter READ_DAT    = 6'b100000;
 reg [2:0] crc_status; 
 reg busy_int;   
+
 genvar i;
 generate
 for(i=0; i<`SD_BUS_W; i=i+1) begin:CRC_16_gen
@@ -160,6 +157,8 @@ reg [2:0] data_send_index;
 always @ (negedge sd_clk or posedge rst   )
 begin  : FSM_OUT
  if (rst) begin
+write_buf_0<=0;
+write_buf_1<=0;
    DAT_oe_o<=0;
    crc_en<=0;
    crc_rst<=1;
@@ -406,6 +405,7 @@ end
   
   
 endmodule
+
 
 
 

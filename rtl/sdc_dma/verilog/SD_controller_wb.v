@@ -8,8 +8,8 @@ module SD_CONTROLLER_WB(
   // WISHBONE master
 
  
-  we_m_tx_bd,  re_m_tx_bd, new_cmd,
-  we_m_rx_bd, re_m_rx_bd,
+  we_m_tx_bd, new_cmd,
+  we_m_rx_bd, 
   we_ack, int_ack, cmd_int_busy,
   Bd_isr_reset,
   normal_isr_reset,
@@ -55,14 +55,14 @@ output reg         wb_ack_o;     // WISHBONE acknowledge output
 
   
 output reg we_m_tx_bd;
-output reg re_m_tx_bd;  
+
 output reg new_cmd;
 output reg we_ack; //CMD acces granted 
 output reg int_ack; //Internal Delayed Ack;
 output reg cmd_int_busy;
 
 output reg we_m_rx_bd; //Write enable Master side Rx_bd
-output reg re_m_rx_bd;  //Read enable Master side Rx_bd
+  //Read enable Master side Rx_bd
 output reg int_busy;
 input write_req_s;
 input wire [15:0] cmd_set_s;
@@ -96,7 +96,7 @@ input wire [31:0] cmd_arg_s;
 `define bd_tx 8'h80  
 
 
-assign m_wb_sel_o = 4'b1111;
+
 `ifdef SUPPLY_VOLTAGE_3_3
    parameter power_controll_reg  = 8'b0000_111_1;
 `elsif SUPPLY_VOLTAGE_3_0

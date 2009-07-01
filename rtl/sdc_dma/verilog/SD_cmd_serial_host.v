@@ -16,7 +16,7 @@ input cmd_dat_i;
 output [39:0] CMD_OUT;
 output ACK_OUT;
 output REQ_OUT;
-output [15:0] STATUS;
+output [7:0] STATUS;
 output reg cmd_oe_o; 
 output reg cmd_out_o;
 output reg [1:0] st_dat_t;
@@ -31,7 +31,7 @@ wire GO_IDLE;
 //---------------Output ports Data Type------  
 reg  [39:0] CMD_OUT;
 wire ACK_OUT  ;
-reg  [15:0] STATUS;
+reg  [7:0] STATUS;
 reg  REQ_OUT;
 
 //-------------Internal Constant-------------

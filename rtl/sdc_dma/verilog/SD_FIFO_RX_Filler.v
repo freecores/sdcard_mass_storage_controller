@@ -1,5 +1,5 @@
 `include "SD_defines.v"
-`include "timescale.v"
+
 module SD_FIFO_RX_FILLER
 ( 
 input clk,

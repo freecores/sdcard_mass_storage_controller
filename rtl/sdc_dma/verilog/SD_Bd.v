@@ -8,9 +8,9 @@ input clk,
 input rst,
 //input stb_m,
 input we_m,
-input re_m,
+
 input [`RAM_MEM_WIDTH-1:0] dat_in_m, 
-output reg [`RAM_MEM_WIDTH-1:0] dat_out_m,
+
 output reg [`BD_WIDTH-1 :0] free_bd,
 
 input  re_s,
@@ -32,7 +32,7 @@ reg [RAM_MEM_WIDTH -1:0] bd_mem [ `BD_SIZE -1 :0];
 reg write_cnt; 
 reg read_cnt;
 reg [`BD_WIDTH -1 :0] m_wr_pnt;
-reg [`BD_WIDTH -1 :0] m_rd_pnt;
+
 reg [`BD_WIDTH -1 :0] s_rd_pnt ;
  
  //Main side read/write  
@@ -42,7 +42,7 @@ begin
   
   if (rst) begin
     m_wr_pnt<=0;
-    m_rd_pnt<=1;
+    
     write_cnt<=0;
     new_bw =0; 
 
@@ -61,10 +61,9 @@ begin
       end
      end
   end   
-  else if (re_m) begin
-        dat_out_m <=bd_mem[m_rd_pnt];
+  
         
-          m_rd_pnt <=m_rd_pnt+2;
+          
         
   end  
 
@@ -114,7 +113,7 @@ reg [1:0]read_s_cnt;
 reg read_cnt;
 
 reg [`BD_WIDTH -1 :0] m_wr_pnt;
-reg [`BD_WIDTH -1 :0] m_rd_pnt;
+
 reg [`BD_WIDTH -1 :0] s_rd_pnt ;
  
  //Main side read/write  
@@ -124,7 +123,7 @@ begin
   
   if (rst) begin
     m_wr_pnt<=0;
-    m_rd_pnt<=2 ;
+    
     write_cnt<=0;
     new_bw =0; 
     read_cnt<=0;
@@ -143,18 +142,8 @@ begin
       end
      end
   end   
-  else if (re_m) begin     //2 Reads to get a 32 bit Word
-        read_cnt <=~ read_cnt;
-        
-        if (!read_cnt) begin
-          dat_out_m <=bd_mem[m_rd_pnt];
-          m_rd_pnt <=m_rd_pnt+1; 
-        end
-        else begin
-         dat_out_m <=bd_mem[m_rd_pnt]; 
-         m_rd_pnt <=m_rd_pnt+3;
-      end   
-  end  
+   
+    
 
 end
 

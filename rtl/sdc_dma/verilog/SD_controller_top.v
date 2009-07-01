@@ -121,7 +121,7 @@ wire int_busy;
 wire [15:0] status_reg_w;
 wire [31:0] cmd_resp_1_w;
 wire [15:0]normal_int_status_reg_w;
-wire [15:0]error_int_status_reg_w; 
+wire [4:0]error_int_status_reg_w; 
  
 
 wire[31:0] argument_reg;
@@ -143,7 +143,7 @@ wire[7:0] Bd_isr_enable_reg;
 //Rx Buffer  Descriptor internal signals
 
 
-wire [`RAM_MEM_WIDTH-1:0] dat_out_m_rx_bd; //Data out from Rx_bd to Master
+
 wire [`BD_WIDTH-1 :0] free_bd_rx_bd; //NO free Rx_bd
 wire new_rx_bd;  // New Bd writen
 
@@ -152,7 +152,7 @@ wire [`RAM_MEM_WIDTH-1:0] dat_out_s_rx_bd; //Data out from Rx_bd to Slave
 //Tx Buffer Descriptor internal signals
 wire [`RAM_MEM_WIDTH-1:0] dat_in_m_rx_bd; //Data in to Rx_bd from Master
 wire [`RAM_MEM_WIDTH-1:0] dat_in_m_tx_bd;
-wire [`RAM_MEM_WIDTH-1:0] dat_out_m_tx_bd;
+
 wire [`BD_WIDTH-1 :0] free_bd_tx_bd;
 wire new_tx_bd;
 
@@ -214,7 +214,7 @@ output sd_clk_o_pad;
 `endif
 assign sd_clk_o_pad  = sd_clk_o ;
 wire [15:0] settings;
-wire [15:0] serial_status;
+wire [7:0] serial_status;
 wire [39:0] cmd_out_master;
 wire [39:0] cmd_in_host;
 
@@ -333,9 +333,9 @@ SD_Bd rx_bd
 .clk (wb_clk_i),
 .rst  (wb_rst_i | software_reset_reg[0]),
 .we_m (we_m_rx_bd),
-.re_m (re_m_rx_bd),
+
 .dat_in_m (dat_in_m_rx_bd),
-.dat_out_m (dat_out_m_rx_bd),
+
 .free_bd (free_bd_rx_bd),
 
 .re_s (re_s_rx_bd_w),
@@ -350,9 +350,9 @@ SD_Bd tx_bd
 .clk (wb_clk_i),
 .rst  (wb_rst_i | software_reset_reg[0]),
 .we_m (we_m_tx_bd),
-.re_m (re_m_tx_bd),
+
 .dat_in_m (dat_in_m_tx_bd),
-.dat_out_m (dat_out_m_tx_bd),
+
 .free_bd (free_bd_tx_bd),
 
 .ack_o_s (ack_o_s_tx),
@@ -416,10 +416,10 @@ SD_CONTROLLER_WB SD_CONTROLLER_WB0
 	 .wb_ack_o(wb_ack_o),
 
    .we_m_tx_bd( we_m_tx_bd           ),
-   .re_m_tx_bd(   re_m_tx_bd         ),
+
    .new_cmd(    new_cmd        ), 
    .we_m_rx_bd(   we_m_rx_bd         )     ,
-   .re_m_rx_bd(  re_m_rx_bd          )     ,
+   
    
    .we_ack(    we_ack        )     ,
    .int_ack(  int_ack          )     ,
@@ -467,10 +467,10 @@ assign int_b = error_int_status_reg & error_int_signal_enable_reg;
 assign int_c =  Bd_isr_reg & Bd_isr_enable_reg;
 `endif
 
-
+assign m_wb_sel_o = 4'b1111;
 
 //Set Bd_Status_reg
-always @ (wb_clk_i ) begin
+always @ (posedge wb_clk_i ) begin
   Bd_Status_reg[15:8]=free_bd_rx_bd;
   Bd_Status_reg[7:0]=free_bd_tx_bd;
   cmd_resp_1<= cmd_resp_1_w;

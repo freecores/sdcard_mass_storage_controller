@@ -1,5 +1,5 @@
 `include "SD_defines.v"
-`include "timescale.v"
+
 module SD_FIFO_TX_FILLER
 ( 
 input clk,
@@ -50,8 +50,7 @@ sd_tx_fifo Tx_Fifo (
 .rst  (rst | reset_tx_fifo)
 );
 
-reg [3:0] t_c_buffer_0;
-reg [3:0] t_c_buffer_1;
+
 assign  m_wb_adr_o = adr+offset;
 
 
