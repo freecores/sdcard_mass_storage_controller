@@ -462,9 +462,9 @@ assign m_wb_we_o = start_tx_fifo ? m_wb_we_o_tx :start_rx_fifo ?m_wb_we_o_rx: 0;
 assign m_wb_adr_o = start_tx_fifo ? m_wb_adr_o_tx :start_rx_fifo ?m_wb_adr_o_rx: 0;
 
 `ifdef IRQ_ENABLE
-assign int_a =normal_int_status_reg &  normal_int_signal_enable_reg;
-assign int_b = error_int_status_reg & error_int_signal_enable_reg;
-assign int_c =  Bd_isr_reg & Bd_isr_enable_reg;
+assign int_a =  |(normal_int_status_reg &  normal_int_signal_enable_reg) ;
+assign int_b =  |(error_int_status_reg & error_int_signal_enable_reg);
+assign int_c =  |(Bd_isr_reg & Bd_isr_enable_reg);
 `endif
 
 assign m_wb_sel_o = 4'b1111;
