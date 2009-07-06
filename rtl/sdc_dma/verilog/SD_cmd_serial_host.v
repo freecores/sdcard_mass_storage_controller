@@ -501,13 +501,13 @@ begin : FSM_OUT
 		      
 		      end 
           else if  (word_select == 2'b10) begin
-           if ( (Cmd_Cnt>72) && (Cmd_Cnt<104) )begin
+           if ( (Cmd_Cnt>=72) && (Cmd_Cnt<104) )begin
 		          word_select_counter<= word_select_counter+1;
 		          Out_Buff[31-word_select_counter] = cmd_dat_i;
 		         end 
 		      end	     
           else if  (word_select == 2'b11) begin
-           if ( (Cmd_Cnt>104) && (Cmd_Cnt<126) )begin
+           if ( (Cmd_Cnt>=104) && (Cmd_Cnt<128) )begin
 		          word_select_counter<= word_select_counter+1;
 		          Out_Buff[31-word_select_counter] = cmd_dat_i;
 		         end 
