@@ -47,13 +47,15 @@ module SD_DATA_MASTER (
   
     
   );
-`define BD_EMPTY (`BD_SIZE  /4) 
+
 `ifdef RAM_MEM_WIDTH_32
       `define READ_CYCLE 2
        reg [1:0]bd_cnt  ;
+       `define BD_EMPTY (`BD_SIZE  /2) 
 `else `ifdef  RAM_MEM_WIDTH_16
       `define READ_CYCLE 4
        reg [2:0] bd_cnt;
+       `define BD_EMPTY (`BD_SIZE  /4) 
    `endif
 `endif 
 
@@ -272,23 +274,38 @@ begin
      GET_RX_BD: begin                 
         //0,1,2,3...
       re_s_rx <= 1;
+     `ifdef  RAM_MEM_WIDTH_32
+     	if (ack_i_s_rx) begin        
+	        if( bd_cnt == 2'b0) begin
+	           sys_adr  <= dat_in_rx;
+	           bd_cnt <= bd_cnt+1;   
+	     	end           
+	        else if ( bd_cnt == 2'b1) begin  
+	           cmd_arg  <= dat_in_rx;
+	           re_s_rx <= 0; 
+	        end
+	   end
+      `endif
+      
+      
       `ifdef  RAM_MEM_WIDTH_16
-      if (ack_i_s_rx) begin        
-        if( bd_cnt == 2'b00) begin
-           sys_adr [15:0] <= dat_in_rx; end
-        else if ( bd_cnt == 2'b01)  begin
-           sys_adr [31:16] <= dat_in_rx; end
-        else if ( bd_cnt == 2) begin
-          cmd_arg [15:0] <= dat_in_rx;
-          re_s_rx <= 0; end
-        else if ( bd_cnt == 3) begin
-           cmd_arg [31:16] <= dat_in_rx;
-           re_s_rx <= 0;
-            end
-         bd_cnt <= bd_cnt+1;
-           
-     
-      end
+      	if (ack_i_s_rx) begin        
+	        if( bd_cnt == 2'b00) begin
+	           sys_adr [15:0] <= dat_in_rx; 
+	        end
+	        else if ( bd_cnt == 2'b01)  begin
+	           sys_adr [31:16] <= dat_in_rx; 
+	        end
+	        else if ( bd_cnt == 2) begin
+	          cmd_arg [15:0] <= dat_in_rx;
+	          re_s_rx <= 0; 
+	        end
+	        else if ( bd_cnt == 3) begin
+	           cmd_arg [31:16] <= dat_in_rx;
+	           re_s_rx <= 0;
+	         end
+	         bd_cnt <= bd_cnt+1;       
+	   	end
        `endif
      //Add Later Save last block addres for comparison with current (For multiple block cmd)
      //Add support for Pre-erased
@@ -303,21 +320,17 @@ begin
         re_s_tx <= 0;
         
        `ifdef  RAM_MEM_WIDTH_32
-      if (ack_i_s_tx) begin
+     	 if (ack_i_s_tx) begin
         
-        if( bd_cnt == 2'b0) begin
-           sys_adr  <= dat_in_tx;
-           bd_cnt <= bd_cnt+1;   
-      end           
-        else if ( bd_cnt == 2'b1) begin  
-           cmd_arg  <= dat_in_tx; 
-        
-          re_s_tx <= 0; 
+	        if( bd_cnt == 2'b0) begin
+	           sys_adr  <= dat_in_tx;
+	           bd_cnt <= bd_cnt+1;   
+	     	end           
+	        else if ( bd_cnt == 2'b1) begin  
+	           cmd_arg  <= dat_in_tx;
+	           re_s_tx <= 0; 
         end
-       
-         
-     
-      end
+	   end
        `endif
       
       `ifdef  RAM_MEM_WIDTH_16
@@ -337,11 +350,8 @@ begin
            cmd_arg [31:16] <= dat_in_tx;
            re_s_tx <= 0;
            bd_cnt <= bd_cnt+1;
-            end
-       
-           
-     
-      end
+         end
+       end
        `endif
      //Add Later Save last block addres for comparison with current (For multiple block cmd)
      //Add support for Pre-erased

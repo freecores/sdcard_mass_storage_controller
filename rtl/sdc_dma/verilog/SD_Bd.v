@@ -24,9 +24,9 @@ reg last_a_cmp;
  
 `ifdef RAM_MEM_WIDTH_32   
 `ifdef ACTEL
-reg [RAM_MEM_WIDTH -1:0] bd_mem [ `BD_SIZE -1 :0]; /* synthesis syn_ramstyle = "no_rw_check"*/
+reg [`RAM_MEM_WIDTH -1:0] bd_mem [ `BD_SIZE -1 :0]; /* synthesis syn_ramstyle = "no_rw_check"*/
 `else
-reg [RAM_MEM_WIDTH -1:0] bd_mem [ `BD_SIZE -1 :0];
+reg [`RAM_MEM_WIDTH -1:0] bd_mem [ `BD_SIZE -1 :0];
 `endif 
 
 reg write_cnt; 
@@ -67,7 +67,7 @@ begin
         
   end  
 
-end
+
 
 always @(posedge clk or posedge rst)
 begin
