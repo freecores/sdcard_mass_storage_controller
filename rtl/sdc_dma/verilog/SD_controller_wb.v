@@ -288,9 +288,9 @@ always @(posedge wb_clk_i )begin
 	         `status : wb_dat_o <=  status_reg ;
            `resp1 : wb_dat_o <=  cmd_resp_1 ;   
            
-           `controller : wb_dat_o <=  controll_setting_reg ;
+           //`controller : wb_dat_o <=  controll_setting_reg ;
            `block :  wb_dat_o <=  block_size_reg ;
-           `power : wb_dat_o <=  power_controll_reg ;
+           //`power : wb_dat_o <=  power_controll_reg ;
            `software : wb_dat_o  <=  software_reset_reg ;
            `timeout : wb_dat_o  <=  time_out_reg ;
            `normal_isr : wb_dat_o <=  normal_int_status_reg ;
@@ -298,7 +298,7 @@ always @(posedge wb_clk_i )begin
            `normal_iser : wb_dat_o <=  normal_int_signal_enable_reg ;
            `error_iser : wb_dat_o  <=  error_int_signal_enable_reg ;
             `clock_d : wb_dat_o  <= clock_divider;
-	         `capa  : wb_dat_o  <=  capabilies_reg ; 
+	       //  `capa  : wb_dat_o  <=  capabilies_reg ; 
 	         `bd_status : wb_dat_o  <=  Bd_Status_reg; 
 	         `bd_isr : wb_dat_o  <=  Bd_isr_reg ; 
 	         `bd_iser : wb_dat_o  <=  Bd_isr_enable_reg ; 
