@@ -6,7 +6,7 @@
 //`define SIM
 `define SYN
 
-//`define IRQ_ENABLE
+`define IRQ_ENABLE
 `define ACTEL
 
 //`define CUSTOM
@@ -19,17 +19,25 @@
 
 `ifdef ACTEL
    `define NR_O_BD_4 
-   `define BD_WIDTH 4
-   `define BD_SIZE 16       
+   `define BD_WIDTH 5
+   `define BD_SIZE 32      
    `define RAM_MEM_WIDTH_16
    `define RAM_MEM_WIDTH 16
   
 `endif
 
+`ifdef CUSTOM
+   `define NR_O_BD_4 
+   `define BD_WIDTH 5
+   `define BD_SIZE 32      
+   `define RAM_MEM_WIDTH_32
+   `define RAM_MEM_WIDTH 32
+`endif
+
 `define RESEND_MAX_CNT 3
 
 `ifdef SYN
-  `define RESET_CLK_DIV 2
+  `define RESET_CLK_DIV 1
   `define MEM_OFFSET 4
 `endif
 
@@ -62,12 +70,13 @@
 
 
 //FIFO defines---------------
-`define FIFO_RX_MEM_DEPTH 16
-`define FIFO_RX_MEM_ADR_SIZE 5
+`define FIFO_RX_MEM_DEPTH 4
+`define FIFO_RX_MEM_ADR_SIZE 3
 
-`define FIFO_TX_MEM_DEPTH 16
-`define FIFO_TX_MEM_ADR_SIZE 5
+`define FIFO_TX_MEM_DEPTH 4
+`define FIFO_TX_MEM_ADR_SIZE 3
 //---------------------------
+
 
 
 
