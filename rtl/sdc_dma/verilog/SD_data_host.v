@@ -227,15 +227,24 @@ write_buf_1<=0;
           
           crc_rst<=0;
           crc_en<=1;
-          last_din <=write_buf_0[3:0]; 
+          `ifdef LITLE_ENDIAN 
+          	last_din <=write_buf_0[3:0]; 
+          	crc_in<= write_buf_0[3:0]; 
+          `endif
+          `ifdef BIG_ENDIAN 
+          	last_din <=write_buf_0[31:28]; 
+          	crc_in<= write_buf_0[31:28]; 
+          `endif
+          
           DAT_oe_o<=1;  
           DAT_dat_o<=0;
-          crc_in<= write_buf_0[3:0]; 
+          
           data_send_index<=1;    
         end
         else if ( (transf_cnt>=2) && (transf_cnt<=`BIT_BLOCK-`CRC_OFF )) begin                 
           DAT_oe_o<=1;    
         case (data_send_index) 
+          `ifdef LITLE_ENDIAN 
            0:begin 
               last_din <=sd_data_out[3:0];
               crc_in <=sd_data_out[3:0];
@@ -267,9 +276,46 @@ write_buf_1<=0;
            end
            7:begin 
               last_din <=sd_data_out[31:28];
-              crc_in <=sd_data_out[31:28];
-              
+              crc_in <=sd_data_out[31:28];              
            end
+          `endif  
+          `ifdef BIG_ENDIAN 
+           0:begin 
+              last_din <=sd_data_out[31:28];
+              crc_in <=sd_data_out[31:28];
+           end
+           1:begin 
+              last_din <=sd_data_out[27:24];
+              crc_in <=sd_data_out[27:24];
+           end
+           2:begin 
+              last_din <=sd_data_out[23:20];
+              crc_in <=sd_data_out[23:20];
+           end
+           3:begin 
+              last_din <=sd_data_out[19:16];
+              crc_in <=sd_data_out[19:16];
+           end
+           4:begin 
+              last_din <=sd_data_out[15:12];
+              crc_in <=sd_data_out[15:12];
+           end
+           5:begin 
+              last_din <=sd_data_out[11:8];
+              crc_in <=sd_data_out[11:8];
+           end
+           6:begin 
+              last_din <=sd_data_out[7:4];
+              crc_in <=sd_data_out[7:4];
+              out_buff_ptr<=out_buff_ptr+1;
+           end
+           7:begin 
+              last_din <=sd_data_out[3:0];
+              crc_in <=sd_data_out[3:0];              
+           end
+          `endif  
+          
+           
          endcase 
           data_send_index<=data_send_index+1;
                    

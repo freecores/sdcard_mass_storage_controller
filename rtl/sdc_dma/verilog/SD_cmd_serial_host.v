@@ -297,46 +297,46 @@ end
 always @ (posedge SD_CLK_IN or posedge RST_IN or posedge GO_IDLE   )
 begin : FSM_OUT
  if (RST_IN || GO_IDLE ) begin    
-    CRC_Enable=0;
-    word_select_counter<=0;
-    Delay_Cnt =0;
-   	cmd_oe_o=1; 		
-    cmd_out_o = 1;  
-  	 Out_Buff =0;
-   	FSM_ACK=1;
-	  REQ_OUT =0;
-	  CRC_RST =1;
-	  CRC_OUT =0;
-	  CRC_IN =0;
-	  CMD_OUT =0;	
-   	Crc_Buffering =0; 
-   	STATUS = 0;
-   	CRC_Valid=0;
-   	Cmd_Cnt=0;
-   	st_dat_t<=0;
-   	if(GO_IDLE) begin
-   	   	cmd_oe_o=0; 		
-    	cmd_out_o = 0; 
+	    CRC_Enable=0;
+	    word_select_counter<=0;
+	    Delay_Cnt =0;
+	   	cmd_oe_o=1; 		
+	    cmd_out_o = 1;  
+	  	 Out_Buff =0;
+	   	FSM_ACK=1;
+		REQ_OUT =0;
+		  CRC_RST =1;
+		  CRC_OUT =0;
+		  CRC_IN =0;
+		  CMD_OUT =0;	
+	   	Crc_Buffering =0; 
+	   	STATUS = 0;
+	   	CRC_Valid=0;
+	   	Cmd_Cnt=0;
+	   	st_dat_t<=0;
+	   	if(GO_IDLE) begin
+	   	   	cmd_oe_o=0; 		
+	    	cmd_out_o = 0; 
    	end
  end 
  else begin
   case(state)
-      INIT : begin
-        Cmd_Cnt=Cmd_Cnt+1;
-          cmd_oe_o=1; 		
-          cmd_out_o = 1;  
-      end
+	INIT : begin
+		Cmd_Cnt=Cmd_Cnt+1;
+		cmd_oe_o=1; 		
+		cmd_out_o = 1;  
+	end
     
-      IDLE : begin
-		  cmd_oe_o=0;      //Put CMD to Z  
-      Delay_Cnt =0;
-      Cmd_Cnt =0;
-		  CRC_RST =1;
-		  CRC_Enable=0; 
-		  CMD_OUT=0;
-		  st_dat_t<=0;
-		   
-	  end  
+	IDLE : begin
+		cmd_oe_o=0;      //Put CMD to Z  
+		Delay_Cnt =0;
+		Cmd_Cnt =0;
+		CRC_RST =1;
+		CRC_Enable=0; 
+		CMD_OUT=0;
+		st_dat_t<=0;
+		word_select_counter<=0;		   
+	end  
 	
 	WRITE_WR:   begin 
 	   FSM_ACK=0;
