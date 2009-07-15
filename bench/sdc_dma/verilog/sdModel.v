@@ -140,7 +140,15 @@ initial begin
 end
 reg qCmd; 
 reg [2:0] crcCnt;
+
+reg add_wrong_cmd_crc;
+reg add_wrong_cmd_indx;
+reg add_wrong_data_crc;
+
 initial begin 
+  add_wrong_data_crc<=0;
+  add_wrong_cmd_indx<=0;
+  add_wrong_cmd_crc<=0;
   cardIdentificationState<=1;
   state<=IDLE;
   dataState<=DATA_IDLE;
@@ -385,7 +393,7 @@ always @ (posedge sdClk) begin
         2 : begin
          if (lastCMD != 41 && outDelayCnt==0) begin
                $fdisplay(sdModel_file_desc, "**Error in sequnce, ACMD 41 should precede 2 in Startup state") ;
-               $display(sdModel_file_desc, "**Error in sequnce, ACMD 41 should precede 2 in Startup state") ;
+               //$display(sdModel_file_desc, "**Error in sequnce, ACMD 41 should precede 2 in Startup state") ;
                CardStatus[3]<=1;
             end  
         response_CMD[127:8] <= CID;
@@ -395,7 +403,7 @@ always @ (posedge sdClk) begin
         3 :  begin 
            if (lastCMD != 2 && outDelayCnt==0 ) begin
                $fdisplay(sdModel_file_desc, "**Error in sequnce, CMD 2 should precede 3 in Startup state") ;
-               $display(sdModel_file_desc, "**Error in sequnce, CMD 2 should precede 3 in Startup state") ;
+               //$display(sdModel_file_desc, "**Error in sequnce, CMD 2 should precede 3 in Startup state") ;
                CardStatus[3]<=1;
             end  
         response_CMD[127:112] <= RCA[15:0] ;
@@ -420,7 +428,7 @@ always @ (posedge sdClk) begin
              response_CMD <= 0;
              response_S<=0;
              $fdisplay(sdModel_file_desc, "**Error Invalid CMD, %h",inCmd[45:40]) ;
-             $display(sdModel_file_desc, "**Error Invalid CMD, %h",inCmd[45:40]) ;
+           //  $display(sdModel_file_desc, "**Error Invalid CMD, %h",inCmd[45:40]) ;
             end
         end   
         7: begin
@@ -520,7 +528,11 @@ always @ (posedge sdClk) begin
      response_CMD[135:134] <=0;
     
     if (responseType != 3)
-       response_CMD[133:128] <=inCmd[45:40];
+       if (!add_wrong_cmd_indx)
+         response_CMD[133:128] <=inCmd[45:40];
+      else
+         response_CMD[133:128] <=0;
+         
     if (responseType == 3)
        response_CMD[133:128] <=6'b111111;
        
@@ -553,10 +565,16 @@ SEND_CMD: begin
     end
    else if (cmdWrite!=0) begin
      crcEn<=0;
+     if (add_wrong_cmd_crc) begin
+        cmdOut<=0;
+        crcCnt<=crcCnt+1; 
+     end 
+     else begin   
      cmdOut<=crcOut[6-crcCnt];
      crcCnt<=crcCnt+1; 
-      if (responseType == 3)
+     if (responseType == 3)
            cmdOut<=1;
+    end     
    end
   if (cmdWrite == response_S-1)
     cmdOut<=1;
@@ -599,8 +617,12 @@ always @ (posedge sdClk) begin
          Inbuff[block_cnt][7:4] <= dat;
        else
           Inbuff[block_cnt][3:0] <= dat;       
-      
-       crcDat_in<=dat;
+       
+       if (!add_wrong_data_crc) 
+          crcDat_in<=dat;
+        else
+          crcDat_in<=4'b1010;
+          
        crc_ok<=1;
        transf_cnt<=transf_cnt+1; 
        if (wptr)
@@ -693,10 +715,15 @@ always @ (negedge sdClk) begin
           end
           else begin
              last_din<=FLASHmem[BlockAddr+(write_out_index)][3:0];
-             crcDat_in<= FLASHmem[BlockAddr+(write_out_index)][3:0];
+             if (!add_wrong_data_crc)
+               crcDat_in<= FLASHmem[BlockAddr+(write_out_index)][3:0];
+             else
+               crcDat_in<=4'b1010; 
              write_out_index<=write_out_index+1;
+             
          end       
-                                
+                 
+                                    
           datOut<= last_din; 
                       
                     
@@ -781,6 +808,9 @@ end
 
 task ResetCard; //  MAC registers
 begin
+   add_wrong_data_crc<=0;
+  add_wrong_cmd_indx<=0;
+  add_wrong_cmd_crc<=0;
  cardIdentificationState<=1;
   state<=IDLE;
   dataState<=DATA_IDLE;
