@@ -126,7 +126,7 @@ if [llength $wave_patterns] {
 }
 
 # Run the simulation
-# run -all
+ run -all
 
 # If waves are required
 if [llength $wave_patterns] {

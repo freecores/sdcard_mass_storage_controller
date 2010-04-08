@@ -88,7 +88,7 @@
 `define CICE 16'h10
 `define CRCE 16'h08
 
-module SD_CONTROLLER_TOP_TB(
+module SD_controller_top_tb(
 
 );
 
@@ -388,7 +388,7 @@ integer     tb_log_file;
 
 initial
 begin
-  tb_log_file = $fopen("../../log/sdc_tb.log");
+  tb_log_file = $fopen("../log/sdc_tb.log");
   if (tb_log_file < 2)
   begin
     $display("*E Could not open/create testbench log file in ../log/ directory!");
@@ -397,7 +397,7 @@ begin
   $fdisplay(tb_log_file, "========================== SD IP Core Testbench results ===========================");
   $fdisplay(tb_log_file, " ");
 
-  phy_log_file_desc = $fopen("../../log/eth_tb_phy.log");
+  phy_log_file_desc = $fopen("../log/eth_tb_phy.log");
   if (phy_log_file_desc < 2)
   begin
     $fdisplay(tb_log_file, "*E Could not open/create sd_tb_phy.log file in ../log/ directory!");
@@ -406,7 +406,7 @@ begin
   $fdisplay(phy_log_file_desc, "================ PHY Module  Testbench access log ================");
   $fdisplay(phy_log_file_desc, " ");
 
-  memory_log_file_desc = $fopen("../../log/sd_tb_memory.log");
+  memory_log_file_desc = $fopen("../log/sd_tb_memory.log");
   if (memory_log_file_desc < 2)
   begin
     $fdisplay(tb_log_file, "*E Could not open/create sd_tb_memory.log file in ../log/ directory!");
@@ -415,7 +415,7 @@ begin
   $fdisplay(memory_log_file_desc, "=============== MEMORY Module Testbench access log ===============");
   $fdisplay(memory_log_file_desc, " ");
 
-  host_log_file_desc = $fopen("../../log/eth_tb_host.log");
+  host_log_file_desc = $fopen("../log/eth_tb_host.log");
   if (host_log_file_desc < 2)
   begin
     $fdisplay(tb_log_file, "*E Could not open/create eth_tb_host.log file in ../log/ directory!");
@@ -424,7 +424,7 @@ begin
   $fdisplay(host_log_file_desc, "================ HOST Module Testbench access log ================");
   $fdisplay(host_log_file_desc, " ");
 
-  wb_s_mon_log_file_desc = $fopen("../../log/eth_tb_wb_s_mon.log");
+  wb_s_mon_log_file_desc = $fopen("../log/eth_tb_wb_s_mon.log");
   if (wb_s_mon_log_file_desc < 2)
   begin
     $fdisplay(tb_log_file, "*E Could not open/create eth_tb_wb_s_mon.log file in ../log/ directory!");
@@ -435,7 +435,7 @@ begin
   $fdisplay(wb_s_mon_log_file_desc, "   Only ERRONEOUS conditions are logged !");
   $fdisplay(wb_s_mon_log_file_desc, " ");
 
-  wb_m_mon_log_file_desc = $fopen("../../log/eth_tb_wb_m_mon.log");
+  wb_m_mon_log_file_desc = $fopen("../log/eth_tb_wb_m_mon.log");
   if (wb_m_mon_log_file_desc < 2)
   begin
     $fdisplay(tb_log_file, "*E Could not open/create eth_tb_wb_m_mon.log file in ../log/ directory!");
