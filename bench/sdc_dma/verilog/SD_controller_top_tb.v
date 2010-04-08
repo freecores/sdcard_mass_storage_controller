@@ -2308,7 +2308,6 @@ begin
      data = 0;
      rand_sel = 0;
      sel = 4'hF;
-      
       //Reset Core
        addr = `SD_BASE + `software ; 
        data = 1;
@@ -2325,7 +2324,7 @@ begin
        addr = `SD_BASE + `software ; 
        data = 0;
        wbm_write(addr, data, 4'hF, 1, wbm_init_waits, wbm_subseq_waits);     
-           sdModelTB0.add_wrong_cmd_crc<=1;
+       sdModelTB0.add_wrong_cmd_crc<=1;
       //Setup settings 
        addr = `SD_BASE + `command ; 
        data = 0; //CMD index 0, Erro check =0, rsp = 0;
@@ -2334,13 +2333,12 @@ begin
        addr = `SD_BASE + `argument  ; 
        data = 0; //CMD index 0, Erro check =0, rsp = 0;
        wbm_write(addr, data, 4'hF, 1, wbm_init_waits, wbm_subseq_waits);
-      
       //wait for send finnish
        addr = `SD_BASE + `normal_isr   ; 
        data = 0; //CMD index 0, Erro check =0, rsp = 0;
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
        while (tmp_data != 1)
-         wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
+       wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
            
          
        if (tmp_data[15]) begin
@@ -2461,20 +2459,31 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data == 0) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-                 
-      end    
+          if (tmp_data[15]== 1) begin
+          
+            addr = `SD_BASE + `error_isr ; 
+             wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
          
+            `TIME;
+             $display("Bus error catched, Error status reg: %h", tmp_data);
+         
+        end
+       
+      end   
+         
+         addr = `SD_BASE + `normal_isr   ; 
+        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
        if (tmp_data[15]) begin
                
          `TIME;
         $display("Normal status register is  0x1: %h, bus error succesfully captured", tmp_data);   
        end      
        else begin
-          test_fail_num("Bus error wasent captured, Normal status register is 0x1: %h",tmp_data);
+          test_fail_num("Bus error wasent captured, Normal status register is: %h",tmp_data);
          `TIME;
-          $display("Bus error wasent captured, Normal status register is 0x1: %h",tmp_data);
+          $display("Bus error wasent captured, Normal status register is : %h",tmp_data);
         fail = fail + 1; 
        end
        
