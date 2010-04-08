@@ -143,7 +143,7 @@ tri [3:0] sd_dat;
 
 assign sd_cmd = sd_cmd_oe ? cmdIn: 1'bz;
 assign sd_dat =  sd_dat_oe  ? datIn : 4'bz;
-
+reg succes;
 sdModel sdModelTB0
 (
 .sdClk (sd_clk_pad_o),
@@ -298,7 +298,7 @@ integer card_rca;
 initial
 begin
   wait(StartTB);
-  
+  succes = 1'b0;
   // Initial global values
   tests_successfull = 0;
   tests_failed = 0;  
@@ -315,43 +315,35 @@ begin
 
   //  Call tests
   //  ----------
-  //note test T1 only valid when SD is in Testmode (sd_tb_defines.v file)
-  
-  IRQ_test_send_cmd(0, 1);           // 0 - 1 //Test RW registers  
+  //note test T5 only valid when SD is in Testmode (sd_tb_defines.v file)
+   $display("T0 Start"); 
+  test_access_to_reg(0, 1);           // 0 - 1 //Test RW registers  
   $display("");
   $display("===========================================================================");
-  $display("IRQ T0 test_access_to_reg Completed");
- $display("===========================================================================");
+  $display("T0 test_access_to_reg Completed");
+  $display("===========================================================================");
   
   
-  //test_access_to_reg(0, 1);           // 0 - 1 //Test RW registers  
-  //$display("");
- // $display("===========================================================================");
-//$display("T0 test_access_to_reg Completed");
-//  $display("===========================================================================");
+  $display("T1 Start");  
+  test_send_cmd(0, 3); 
+  //   0:  Send CMD0, No Response                               ////
+   //  1:  Send CMD3, 48-Bit Response, No error check
+    //2:  Send CMD3, 48-Bit Response, All Error check   
+  //   3:  Send CMD2, 136-Bit Response 
+  $display("");
+  $display("===========================================================================");
+  $display("T1 test_send_cmd Completed");
+  $display("===========================================================================");
   
-  
-  
-// test_send_cmd(0, 3); 
-  ///   0:  Send CMD0, No Response                               ////
-  ///   1:  Send CMD3, 48-Bit Response, No error check
-  ///   2:  Send CMD3, 48-Bit Response, All Error check   
-  ///   3:  Send CMD2, 136-Bit Response 
-// $display("");
- // $display("===========================================================================");
- // $display("T1 test_send_cmd Completed");
-  //$display("===========================================================================");
-  
-  //test_cmd_error_handling (0,3);
-  
+
+ $display("T2 Start");  
  test_init_sequnce(0, 1);
  $display("");  
  $display("===========================================================================");
-  $display("T2 test_init_sequence Completed");
-  $display("===========================================================================");
+ $display("T2 test_init_sequence Completed");
+ $display("===========================================================================");
   
-  $display("T3 Start");
-  
+  $display("T3 Start");  
   test_send_data(0, 1);
   $display("");
   $display("===========================================================================");
@@ -359,26 +351,29 @@ begin
   $display("===========================================================================");
   
  // test_send_rec_data
-   test_send_rec_data(0, 1);
+  $display("T4 Start");  
+  test_send_rec_data(0, 1);
   $display("");
   $display("===========================================================================");
   $display("T4 test_send_rec_data Completed");
   $display("===========================================================================");
  
   //test_send_rec_data
+   $display("T5 Start");  
   test_send_cmd_error_rsp(0, 3);
- // $display("");
- // $display("===========================================================================");
-  $display("T5 test_send_cmd_error_rsp Complete");
- // $display("===========================================================================");
+ $display("");
+ $display("===========================================================================");
+ $display("T5 test_send_cmd_error_rsp Complete");
+ $display("===========================================================================");
  
    //  test_send_rec_data_error_rsp
- test_send_rec_data_error_rsp(0, 1);
+ //test_send_rec_data_error_rsp(0, 1);
 // $display("");
 //  $display("===========================================================================");
-  $display("T6 test_send_cmd_error_rsp Complete");
+ // $display("T6 test_send_cmd_error_rsp Complete");
  // $display("===========================================================================");
- 
+ $display("All Tests past");
+  succes = 1'b1;
 end
 
 
@@ -393,7 +388,7 @@ integer     tb_log_file;
 
 initial
 begin
-  tb_log_file = $fopen("log/sdc_tb.log");
+  tb_log_file = $fopen("../../log/sdc_tb.log");
   if (tb_log_file < 2)
   begin
     $display("*E Could not open/create testbench log file in ../log/ directory!");
@@ -402,7 +397,7 @@ begin
   $fdisplay(tb_log_file, "========================== SD IP Core Testbench results ===========================");
   $fdisplay(tb_log_file, " ");
 
-  phy_log_file_desc = $fopen("log/eth_tb_phy.log");
+  phy_log_file_desc = $fopen("../../log/eth_tb_phy.log");
   if (phy_log_file_desc < 2)
   begin
     $fdisplay(tb_log_file, "*E Could not open/create sd_tb_phy.log file in ../log/ directory!");
@@ -411,7 +406,7 @@ begin
   $fdisplay(phy_log_file_desc, "================ PHY Module  Testbench access log ================");
   $fdisplay(phy_log_file_desc, " ");
 
-  memory_log_file_desc = $fopen("log/sd_tb_memory.log");
+  memory_log_file_desc = $fopen("../../log/sd_tb_memory.log");
   if (memory_log_file_desc < 2)
   begin
     $fdisplay(tb_log_file, "*E Could not open/create sd_tb_memory.log file in ../log/ directory!");
@@ -420,7 +415,7 @@ begin
   $fdisplay(memory_log_file_desc, "=============== MEMORY Module Testbench access log ===============");
   $fdisplay(memory_log_file_desc, " ");
 
-  host_log_file_desc = $fopen("log/eth_tb_host.log");
+  host_log_file_desc = $fopen("../../log/eth_tb_host.log");
   if (host_log_file_desc < 2)
   begin
     $fdisplay(tb_log_file, "*E Could not open/create eth_tb_host.log file in ../log/ directory!");
@@ -429,7 +424,7 @@ begin
   $fdisplay(host_log_file_desc, "================ HOST Module Testbench access log ================");
   $fdisplay(host_log_file_desc, " ");
 
-  wb_s_mon_log_file_desc = $fopen("log/eth_tb_wb_s_mon.log");
+  wb_s_mon_log_file_desc = $fopen("../../log/eth_tb_wb_s_mon.log");
   if (wb_s_mon_log_file_desc < 2)
   begin
     $fdisplay(tb_log_file, "*E Could not open/create eth_tb_wb_s_mon.log file in ../log/ directory!");
@@ -440,7 +435,7 @@ begin
   $fdisplay(wb_s_mon_log_file_desc, "   Only ERRONEOUS conditions are logged !");
   $fdisplay(wb_s_mon_log_file_desc, " ");
 
-  wb_m_mon_log_file_desc = $fopen("log/eth_tb_wb_m_mon.log");
+  wb_m_mon_log_file_desc = $fopen("../../log/eth_tb_wb_m_mon.log");
   if (wb_m_mon_log_file_desc < 2)
   begin
     $fdisplay(tb_log_file, "*E Could not open/create eth_tb_wb_m_mon.log file in ../log/ directory!");
@@ -951,24 +946,24 @@ begin
         	while (  resp_data[0]  !=1   ) begin
 			      wbm_read(addr, resp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
 			      if (resp_data[1] ) begin
-			       test_fail_num("Error in TEST 4.0: Data resend try >N.  BD_ISR  %h", resp_data);
+			       test_fail_num("Error in TEST 4.0: Data resend When Writing try >N.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: Data resend try >N.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0: Data resend When Writing try >N.  BD_ISR  %h", resp_data); 
 			      end
 			      if (resp_data[2] ) begin
-			         test_fail_num("Error in TEST 4.0: FIFO underflow/overflow.  BD_ISR  %h", resp_data);
+			         test_fail_num("Error in TEST 4.0: FIFO underflow/overflow When Writing.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: FIFO underflow/overflow.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0: FIFO underflow/overflow When Writing.  BD_ISR  %h", resp_data); 
 			      end
             if (resp_data[4] ) begin
-			         test_fail_num("Error in TEST 4.0: Command error.  BD_ISR  %h", resp_data);
+			         test_fail_num("Error in TEST 4.0: Command error When Writing.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: Command error.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0: Command error When Writing.  BD_ISR  %h", resp_data); 
 			      end
 			      if (resp_data[5] ) begin
-			         test_fail_num("Error in TEST 4.0: Data CRC error.  BD_ISR  %h", resp_data);
+			         test_fail_num("Error in TEST 4.0: Data CRC error When Writing.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: Data CRC error.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0: Data CRC error When Writing.  BD_ISR  %h", resp_data); 
 			      end   			        
 			      sdModelTB0.add_wrong_data_crc<=0;
 			    end  
@@ -992,24 +987,24 @@ sdModelTB0.add_wrong_data_crc<=1;
         	while (  resp_data[0]  !=1   ) begin
 			      wbm_read(addr, resp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
 			      if (resp_data[1] ) begin
-			       test_fail_num("Error in TEST 4.0: Data resend try >N.  BD_ISR  %h", resp_data);
+			       test_fail_num("Error in TEST 4.0 When Reading: Data resend try >N.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: Data resend try >N.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0 When Reading: Data resend try >N.  BD_ISR  %h", resp_data); 
 			      end
 			       if (resp_data[2] ) begin
-			         test_fail_num("Error in TEST 4.0: FIFO underflow/overflow.  BD_ISR  %h", resp_data);
+			         test_fail_num("Error in TEST 4.0 When Reading: FIFO underflow/overflow.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: FIFO underflow/overflow.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0 When Reading: FIFO underflow/overflow.  BD_ISR  %h", resp_data); 
 			      end
             if (resp_data[4] ) begin
-			         test_fail_num("Error in TEST 4.0: Command error.  BD_ISR  %h", resp_data);
+			         test_fail_num("Error in TEST 4.0 When Reading: Command error.  BD_ISR  %h", resp_data);
             `TIME;
              $display("Error in TEST 4.0: Command error.  BD_ISR  %h", resp_data); 
 			      end
 			       if (resp_data[5] ) begin
 			         test_fail_num("Error in TEST 4.0: Data CRC error.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: Data CRC error.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0: Data CRC error When Reading.  BD_ISR  %h", resp_data); 
 			      end
         			        
 			      
@@ -1057,9 +1052,7 @@ input  [31:0]  start_task;
   reg [31:0] rsp;
 begin
 // access_to_reg
-test_heading("access_to_reg");
-$display(" ");
-$display("access_to_reg TEST");
+
 fail = 0;
 resp_data = 0;
 // reset MAC registers
@@ -1356,35 +1349,35 @@ begin
         	while (  resp_data[0]  !=1   ) begin
 			      wbm_read(addr, resp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
 			      if (resp_data[1] ) begin
-			       test_fail_num("Error in TEST 4.0: Data resend try >N.  BD_ISR  %h", resp_data);
+			       test_fail_num("Error in TEST 4.0 when writing: Data resend try >N.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: Data resend try >N.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0 when writing: Data resend try >N.  BD_ISR  %h", resp_data); 
 			      end
 			      else if (resp_data[2] ) begin
-			         test_fail_num("Error in TEST 4.0: FIFO underflow/overflow.  BD_ISR  %h", resp_data);
+			         test_fail_num("Error in TEST 4.0 when writing :  FIFO underflow/overflow.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: FIFO underflow/overflow.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0 when writing: FIFO underflow/overflow.  BD_ISR  %h", resp_data); 
 			      end
             else if (resp_data[4] ) begin
-			         test_fail_num("Error in TEST 4.0: Command error.  BD_ISR  %h", resp_data);
+			         test_fail_num("Error in TEST 4.0 when writing: Command error.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: Command error.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0 when writing: Command error.  BD_ISR  %h", resp_data); 
 			      end
 			      else if (resp_data[5] ) begin
-			         test_fail_num("Error in TEST 4.0: Data CRC error.  BD_ISR  %h", resp_data);
+			         test_fail_num("Error in TEST 4.0 when writing: Data CRC error.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: Data CRC error.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0 when writing: Data CRC error.  BD_ISR  %h", resp_data); 
 			      end   			        
 			      
 			    end  
 			    clear_memories;  
 
 			     addr = `SD_BASE + `BD_RX  ; 
-        data = 0; //CMD index 0, Erro check =0, rsp = 0;
+        data = 0; //
         wbm_write(addr, data, 4'hF, 1, wbm_init_waits, wbm_subseq_waits);
         
         addr = `SD_BASE + `BD_RX  ; 
-        data = 0; //CMD index 0, Erro check =0, rsp = 0;
+        data = 0; //C
         wbm_write(addr, data, 4'hF, 1, wbm_init_waits, wbm_subseq_waits);
         
 
@@ -1397,24 +1390,24 @@ begin
         	while (  resp_data[0]  !=1   ) begin
 			      wbm_read(addr, resp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
 			      if (resp_data[1] ) begin
-			       test_fail_num("Error in TEST 4.0: Data resend try >N.  BD_ISR  %h", resp_data);
+			       test_fail_num("Error in TEST 4.0 when reading: Data resend try >N.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: Data resend try >N.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0 when reading: Data resend try >N.  BD_ISR  %h", resp_data); 
 			      end
 			      else if (resp_data[2] ) begin
-			         test_fail_num("Error in TEST 4.0: FIFO underflow/overflow.  BD_ISR  %h", resp_data);
+			         test_fail_num("Error in TEST 4.0 when reading: FIFO underflow/overflow.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: FIFO underflow/overflow.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0 when reading: FIFO underflow/overflow.  BD_ISR  %h", resp_data); 
 			      end
             else if (resp_data[4] ) begin
-			         test_fail_num("Error in TEST 4.0: Command error.  BD_ISR  %h", resp_data);
+			         test_fail_num("Error in TEST 4.0 when reading: Command error.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: Command error.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0 when reading: Command error.  BD_ISR  %h", resp_data); 
 			      end
 			      else if (resp_data[5] ) begin
-			         test_fail_num("Error in TEST 4.0: Data CRC error.  BD_ISR  %h", resp_data);
+			         test_fail_num("Error in TEST 4.0 when reading: Data CRC error.  BD_ISR  %h", resp_data);
             `TIME;
-             $display("Error in TEST 4.0: Data CRC error.  BD_ISR  %h", resp_data); 
+             $display("Error in TEST 4.0 when reading: Data CRC error.  BD_ISR  %h", resp_data); 
 			      end
         			        
 			      
@@ -2276,9 +2269,9 @@ input  [31:0]  start_task;
   reg [31:0] rsp;
 begin
 // test_send_cmd
-test_heading("Send CMD");
+test_heading("Send CMD, with simulated bus error on SD_CMD line");
 $display(" ");
-$display("test_send_cmd TEST");
+$display("test_send_cmd_error_rsp");
 fail = 0;
 
 // reset MAC registers
@@ -2303,13 +2296,13 @@ begin
         
   //////////////////////////////////////////////////////////////////////
   ////                                                          //// 
-  //Test 0:  Send CMD, No Response                               ////
+  //Test 5:  Send CMD, with a simulated bus error               ////
   //////////////////////////////////////////////////////////////////////
   if (test_num == 0) //
   begin
 
     test_name   = "0:  Send CMD, No Response  ";
-    `TIME; $display("  TEST 0: 0:  Send CMD, No Response  ");
+    `TIME; $display("  TEST 5 part 0: Send CMD, No Response  ");
       wbm_init_waits = 0;
       wbm_subseq_waits = {$random} % 5;
      data = 0;
@@ -2352,7 +2345,7 @@ begin
          
        if (tmp_data[15]) begin
          fail = fail + 1;
-         test_fail_num("Error occured when sending CMD0 in TEST0", i_addr);
+         test_fail_num("Error occured when sending CMD0 in TEST5", i_addr);
          `TIME;
         $display("Normal status register is not 0x1: %h", tmp_data);         
        end 
@@ -2369,8 +2362,8 @@ begin
    //////////////////////////////////////////////////////////////////////
     if (test_num == 1) //
     begin
-     test_name   = "  1:  Send CMD, 48-Bit Response, No error check   ";
-    `TIME; $display("  TEST 1:  Send CMD, 48-Bit Response, No error check  ");
+     test_name   = "  TEST 5, part 1:   Send CMD, 48-Bit Response, No error check   ";
+    `TIME; $display("  TEST 5, part 1:  Send CMD, 48-Bit Response, No error check  ");
       wbm_init_waits = 0;
       wbm_subseq_waits = {$random} % 5;
      data = 0;
@@ -2411,7 +2404,7 @@ begin
             fail = fail + 1;
             addr = `SD_BASE + `error_isr ; 
              wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-            test_fail_num("Error occured when sending CMD3 in TEST 1", i_addr);
+            test_fail_num("Error occured when sending CMD3 in TEST 5", i_addr);
             `TIME;
              $display("Error status reg: %h", tmp_data);  
         end
@@ -2420,7 +2413,7 @@ begin
          
        if (tmp_data[15]) begin
          fail = fail + 1;
-         test_fail_num("Error occured when sending CMD3 in TEST 1", i_addr);
+         test_fail_num("Error occured when sending CMD3 in TEST 5", i_addr);
          `TIME;
         $display("Normal status register is not 0x1: %h", tmp_data);         
        end
@@ -2432,8 +2425,8 @@ begin
    //////////////////////////////////////////////////////////////////////
     if (test_num == 2) //
     begin
-     test_name   = " 2:  Send CMD3, 48-Bit Response, All Error check  enable   ";
-    `TIME; $display("  Test 2:  Send CMD3, 48-Bit Response, All Error check  enable   ");
+     test_name   = " TEST 5, part 2:   Send CMD3, 48-Bit Response, All Error check  enable   ";
+    `TIME; $display("  TEST 5, part 2:   Send CMD3, 48-Bit Response, All Error check  enable   ");
       wbm_init_waits = 0;
       wbm_subseq_waits = {$random} % 5;
      data = 0;
@@ -2470,23 +2463,19 @@ begin
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
        while (tmp_data != 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-          if (tmp_data[15]== 1) begin
-            $display("Normal status reg: %h", tmp_data);  
-            fail = fail + 1;
-            addr = `SD_BASE + `error_isr ; 
-             wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-            test_fail_num("Error occured when sending CMD3 in TEST 2", i_addr);
-            `TIME;
-             $display("Error status reg: %h", tmp_data);  
-        end
-       
+                 
       end    
          
        if (tmp_data[15]) begin
-         fail = fail + 1;
-         test_fail_num("Error occured when sending CMD3 in TEST2", i_addr);
+               
          `TIME;
-        $display("Normal status register is not 0x1: %h", tmp_data);         
+        $display("Normal status register is  0x1: %h, bus error succesfully captured", tmp_data);   
+       end      
+       else begin
+          test_fail_num("Bus error wasent captured, Normal status register is 0x1: %h",tmp_data);
+         `TIME;
+          $display("Bus error wasent captured, Normal status register is 0x1: %h",tmp_data);
+        fail = fail + 1; 
        end
        
        
@@ -2496,8 +2485,8 @@ begin
     end
      if (test_num == 3) //
     begin
-     test_name   = " 3:  Send CMD2, 136-Bit    ";
-    `TIME; $display("  Test 3:  Send CMD2, 136-Bit    ");
+     test_name   = " Test 5 part 4:   Send CMD2, 136-Bit    ";
+    `TIME; $display("  Test 5 part 4:  Send CMD2, 136-Bit    ");
       wbm_init_waits = 0;
       wbm_subseq_waits = {$random} % 5;
      data = 0;
@@ -2538,7 +2527,7 @@ begin
             fail = fail + 1;
             addr = `SD_BASE + `error_isr ; 
              wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-            test_fail_num("Error occured when sending CMD2 in TEST 3", i_addr);
+            test_fail_num("Error occured when sending CMD2 in TEST 5", i_addr);
             `TIME;
              $display("Error status reg: %h", tmp_data);  
         end

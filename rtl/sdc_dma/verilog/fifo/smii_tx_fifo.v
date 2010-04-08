@@ -1,6 +1,6 @@
+
+`include "timescale.v"
 `include "SD_defines.v"
-
-
 module sd_tx_fifo
   (
    input [32-1:0] d,

@@ -1,5 +1,5 @@
 `include "SD_defines.v"
-
+`include "timescale.v"
 module sd_rx_fifo
   (
    input [4-1:0] d,
@@ -34,7 +34,7 @@ module sd_rx_fifo
    end    
      else
        begin
-	 `ifdef BIG_ENDIAN 
+	 `ifdef BIG_ENDIAN
 	   
 	  if (wr & we[7]) begin
 	    tmp[4*1-1:4*0] <= d;	 
@@ -54,7 +54,7 @@ module sd_rx_fifo
  	  if (wr & we[0]) 
 	    tmp[4*8-1:4*7] <= d;	 
 	 `endif 
-	 `ifdef LITTLE_ENDIAN
+	 `ifdef LITTLE_ENDIAN 
 	  if (wr & we[0])
 	   tmp[4*1-1:4*0] <= d;	 
 	  if (wr & we[1])

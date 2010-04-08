@@ -1,4 +1,4 @@
-//`include "timescale.v"
+ //`include "timescale.v"
 `include "SD_defines.v"
 `define tTLH 10 //Clock rise time
 `define tHL 10 //Clock fall time
@@ -131,7 +131,7 @@ reg [5:0] startUppCnt;
 
 reg q_start_bit;
 //Card initinCMd
-initial $readmemh("FLASH.txt",FLASHmem);
+initial $readmemh("../bin/FLASH.txt",FLASHmem);
 
 integer k;
 initial begin
@@ -798,7 +798,7 @@ integer sdModel_file_desc;
 
 initial
 begin
-  sdModel_file_desc = $fopen("log/sd_model.log");
+  sdModel_file_desc = $fopen("../log/sd_model.log");
   if (sdModel_file_desc < 2)
   begin
     $display("*E Could not open/create testbench log file in /log/ directory!");

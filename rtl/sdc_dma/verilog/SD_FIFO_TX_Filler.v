@@ -58,6 +58,7 @@ reg first;
 
 reg ackd;
 reg delay;
+
 always @(posedge clk or posedge rst )begin
  if (rst) begin
      offset <=0;

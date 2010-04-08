@@ -102,7 +102,7 @@ reg     `WB_DATA_TYPE wb_memory [0:1048575]; // WB memory - 20 addresses connect
 reg     `WB_DATA_TYPE mem_wr_data_out;
 reg     `WB_DATA_TYPE mem_rd_data_in;
 
-initial $readmemh("wb_memory.txt",wb_memory);
+initial $readmemh("../bin/wb_memory.txt",wb_memory);
 
 integer k;
 initial begin

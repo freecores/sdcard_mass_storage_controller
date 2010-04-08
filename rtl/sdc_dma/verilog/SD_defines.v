@@ -3,8 +3,8 @@
 `define BIG_ENDIAN
 //`define LITLE_ENDIAN
 
-//`define SIM
-`define SYN
+`define SIM
+//`define SYN
 
 `define IRQ_ENABLE
 `define ACTEL
@@ -14,27 +14,29 @@
 //`define XLINX
 //`define SIMULATOR
 
+`define RESEND_MAX_CNT 3
+
 //MAX 255 BD
 //BD size/4 
 
 `ifdef ACTEL
-   `define NR_O_BD_4 
-   `define BD_WIDTH 5
-   `define BD_SIZE 32      
+  `define NR_O_BD_4 
+  `define BD_WIDTH 5
+  `define BD_SIZE 32      
    `define RAM_MEM_WIDTH_16
-   `define RAM_MEM_WIDTH 16
+  `define RAM_MEM_WIDTH 16
   
 `endif
 
-`ifdef CUSTOM
-   `define NR_O_BD_4 
-   `define BD_WIDTH 5
-   `define BD_SIZE 32      
-   `define RAM_MEM_WIDTH_32
-   `define RAM_MEM_WIDTH 32
-`endif
+//`ifdef CUSTOM
+ //  `define NR_O_BD_4 
+//   `define BD_WIDTH 5
+//   `define BD_SIZE 32      
+//   `define RAM_MEM_WIDTH_32
+//   `define RAM_MEM_WIDTH 32
+//`endif
 
-`define RESEND_MAX_CNT 3
+
 
 `ifdef SYN
   `define RESET_CLK_DIV 1
@@ -43,7 +45,7 @@
 
 `ifdef SIM
   `define RESET_CLK_DIV 0
-  `define MEM_OFFSET 1
+  `define MEM_OFFSET 4
 `endif
 
 //SD-Clock Defines ---------

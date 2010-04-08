@@ -47,7 +47,7 @@ module SD_DATA_MASTER (
   
     
   );
-
+`define RESEND_MAX_CNT 3
 `ifdef RAM_MEM_WIDTH_32
       `define READ_CYCLE 2
        reg [1:0]bd_cnt  ;
@@ -399,7 +399,7 @@ begin
          d_write<=0;  
          if (!cmd_tsf_err) begin
            if (card_status[0]) begin
-               `ifdef SYN
+               
                 if ( (card_status[4:1] == 4'b0100) || (card_status[4:1] == 4'b0110) || (card_status[4:1] == 4'b0101) )
                     rec_done<=1;
                 else begin
@@ -407,25 +407,19 @@ begin
                     Dat_Int_Status[4] <=1; 
                        start_tx_fifo<=0;  
                 end 
-                `endif  
+                
                  
                                      
                //Check card_status[5:1] for state 4 or 6... 
                //If wrong state change interupt status reg,so software can put card in
                // transfer state and restart/cancel Data transfer
           end
-           `ifdef SIM
-                  rec_done<=1;
-                  start_tx_fifo<=1;    
-          `endif  
+          
          end
          else begin
              rec_failed<=1;  //CRC-Error, CIC-Error or timeout 
                 start_tx_fifo<=0;  
-             `ifdef SIM
-                  rec_done<=1;  
-                   start_tx_fifo<=1;  
-             `endif   end
+                end
        end  
     end
     
