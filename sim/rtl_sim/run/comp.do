@@ -126,7 +126,9 @@ if [llength $wave_patterns] {
 }
 
 # Run the simulation
+ when {/SD_controller_top_tb/succes = 1} {stop}
  run -all
+ 
 
 # If waves are required
 if [llength $wave_patterns] {
