@@ -46,7 +46,7 @@
 
 //`define TX_ERROR_TEST
 `include "wb_model_defines.v"
-`include "SD_defines.v"
+`include "sd_defines.v"
 `define TIME $display("  Time: %0t", $time)
 
 `define BD_RX 8'h60
@@ -88,7 +88,7 @@
 `define CICE 16'h10
 `define CRCE 16'h08
 
-module SD_controller_top_tb(
+module sd_controller_top_tb(
 
 );
 
@@ -155,7 +155,7 @@ sdModel sdModelTB0
 
 //Instaciate SD-Card controller
 
-SD_CONTROLLER_TOP sd_controller_top_0
+sdc_controller sd_controller_top_0
 	(
 	 .wb_clk_i(wb_clk),
 	 .wb_rst_i(wb_rst),
