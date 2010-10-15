@@ -137,12 +137,13 @@ wire sd_cmd_oe;
 wire sd_dat_oe;
 wire cmdIn;
 wire [3:0] datIn;
-
+wire card_detect;
 trireg sd_cmd;
 tri [3:0] sd_dat;
 
 assign sd_cmd = sd_cmd_oe ? cmdIn: 1'bz;
 assign sd_dat =  sd_dat_oe  ? datIn : 4'bz;
+assign card_detect = 1'b1;
 reg succes;
 sdModel sdModelTB0
 (
@@ -183,7 +184,8 @@ sdc_controller sd_controller_top_0
 	 .sd_dat_dat_i ( sd_dat  ),  //sd_dat_pad_io),
 	 .sd_dat_out_o (datIn  ) ,
    .sd_dat_oe_o ( sd_dat_oe  ),
-	 .sd_clk_o_pad  (sd_clk_pad_o)
+	 .sd_clk_o_pad  (sd_clk_pad_o),
+   .card_detect (card_detect)
 	  `ifdef SD_CLK_SEP
    ,sd_clk_i_pad
   `endif
@@ -367,12 +369,12 @@ begin
  $display("===========================================================================");
  
    //  test_send_rec_data_error_rsp
- //test_send_rec_data_error_rsp(0, 1);
+ test_send_rec_data_error_rsp(0, 1);
 // $display("");
 //  $display("===========================================================================");
- // $display("T6 test_send_cmd_error_rsp Complete");
+ $display("T6 test_send_cmd_error_rsp Complete");
  // $display("===========================================================================");
- $display("All Tests past");
+ $display("All Test finnished. Nr Failed: %d, Nr Succes: %d", tests_failed,tests_successfull);
   succes = 1'b1;
 end
 
@@ -575,7 +577,7 @@ begin
        addr = `SD_BASE + `normal_isr   ; 
        data = 0; //CMD index 0, Erro check =0, rsp = 0;
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1)
+       while (tmp_data[0] != 1)
          wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
            
          
@@ -711,7 +713,7 @@ begin
        addr = `SD_BASE + `normal_isr   ; 
        data = 0; //CMD index 0, Erro check =0, rsp = 0;
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1)
+       while (tmp_data[0] != 1)
          wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);         
         if (tmp_data[15]) begin
          fail = fail + 1;
@@ -733,7 +735,7 @@ begin
        addr = `SD_BASE + `normal_isr   ; 
        data = 0; //CMD index 8, Erro check =0, rsp = 0;
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);      
-       while (tmp_data != 1) begin
+       while (tmp_data[0] != 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);         
           if (tmp_data[15]) begin
              $display("V 1.0 Card, Timeout In TEST 4.0 %h", tmp_data);  
@@ -754,7 +756,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0] != 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);          
           if (tmp_data[15]== 1) begin
              fail = fail + 1;
@@ -777,7 +779,7 @@ begin
         //wait for response or timeout
         addr = `SD_BASE + `normal_isr   ; 
         wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-        while (tmp_data != 1) begin
+        while (tmp_data[0] != 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -805,7 +807,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -834,7 +836,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -864,7 +866,7 @@ begin
         //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -890,7 +892,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);          
           if (tmp_data[15]== 1) begin
              fail = fail + 1;
@@ -913,7 +915,7 @@ begin
         //wait for response or timeout
         addr = `SD_BASE + `normal_isr   ; 
         wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-        while (tmp_data != 1) begin
+        while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -1114,7 +1116,7 @@ begin
        addr = `SD_BASE + `normal_isr   ; 
        data = 0; //CMD index 0, Erro check =0, rsp = 0;
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1)
+       while (tmp_data[0]!= 1)
          wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);         
         if (tmp_data[15]) begin
          fail = fail + 1;
@@ -1136,7 +1138,7 @@ begin
        addr = `SD_BASE + `normal_isr   ; 
        data = 0; //CMD index 8, Erro check =0, rsp = 0;
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);      
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);         
           if (tmp_data[15]) begin
              $display("V 1.0 Card, Timeout In TEST 4.0 %h", tmp_data);  
@@ -1157,7 +1159,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);          
           if (tmp_data[15]== 1) begin
              fail = fail + 1;
@@ -1180,7 +1182,7 @@ begin
         //wait for response or timeout
         addr = `SD_BASE + `normal_isr   ; 
         wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-        while (tmp_data != 1) begin
+        while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -1208,7 +1210,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -1237,7 +1239,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -1267,7 +1269,7 @@ begin
         //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -1293,7 +1295,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);          
           if (tmp_data[15]== 1) begin
              fail = fail + 1;
@@ -1316,7 +1318,7 @@ begin
         //wait for response or timeout
         addr = `SD_BASE + `normal_isr   ; 
         wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-        while (tmp_data != 1) begin
+        while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -1526,7 +1528,7 @@ begin
        addr = `SD_BASE + `normal_isr   ; 
        data = 0; //CMD index 0, Erro check =0, rsp = 0;
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1)
+       while (tmp_data[0]!= 1)
          wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);         
         if (tmp_data[15]) begin
          fail = fail + 1;
@@ -1548,7 +1550,7 @@ begin
        addr = `SD_BASE + `normal_isr   ; 
        data = 0; //CMD index 8, Erro check =0, rsp = 0;
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);      
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);         
           if (tmp_data[15]) begin
              $display("V 1.0 Card, Timeout In TEST 4.0 %h", tmp_data);  
@@ -1569,7 +1571,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);          
           if (tmp_data[15]== 1) begin
              fail = fail + 1;
@@ -1592,7 +1594,7 @@ begin
         //wait for response or timeout
         addr = `SD_BASE + `normal_isr   ; 
         wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-        while (tmp_data != 1) begin
+        while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -1620,7 +1622,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -1649,7 +1651,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -1679,7 +1681,7 @@ begin
         //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -1705,7 +1707,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);          
           if (tmp_data[15]== 1) begin
              fail = fail + 1;
@@ -1728,7 +1730,7 @@ begin
         //wait for response or timeout
         addr = `SD_BASE + `normal_isr   ; 
         wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-        while (tmp_data != 1) begin
+        while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -1887,7 +1889,7 @@ begin
        addr = `SD_BASE + `normal_isr   ; 
        data = 0; //CMD index 0, Erro check =0, rsp = 0;
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1)
+       while (tmp_data[0]!= 1)
          wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);         
         if (tmp_data[15]) begin
          fail = fail + 1;
@@ -1909,7 +1911,7 @@ begin
        addr = `SD_BASE + `normal_isr   ; 
        data = 0; //CMD index 8, Erro check =0, rsp = 0;
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);      
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);         
           if (tmp_data[15]) begin
              $display("V 1.0 Card, Timeout In TEST 3.0 %h", tmp_data);  
@@ -1930,7 +1932,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);          
           if (tmp_data[15]== 1) begin
              fail = fail + 1;
@@ -1953,7 +1955,7 @@ begin
         //wait for response or timeout
         addr = `SD_BASE + `normal_isr   ; 
         wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-        while (tmp_data != 1) begin
+        while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -1981,7 +1983,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -2010,7 +2012,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -2183,7 +2185,7 @@ begin
        
         15: begin      
          i_addr = `normal_isr;
-         rsp = 16'h000;         
+         rsp = 16'h0004;         
        end      
 
          
@@ -2269,7 +2271,7 @@ input  [31:0]  start_task;
   reg [31:0] rsp;
 begin
 // test_send_cmd
-test_heading("Send CMD, with simulated bus error on SD_CMD line");
+test_heading("Send CMD, With simulated bus error on SD_CMD line");
 $display(" ");
 $display("test_send_cmd_error_rsp");
 fail = 0;
@@ -2337,7 +2339,7 @@ begin
        addr = `SD_BASE + `normal_isr   ; 
        data = 0; //CMD index 0, Erro check =0, rsp = 0;
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1)
+       while (tmp_data[0]!= 1)
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
            
          
@@ -2361,7 +2363,7 @@ begin
     if (test_num == 1) //
     begin
      test_name   = "  TEST 5, part 1:   Send CMD, 48-Bit Response, No error check   ";
-    `TIME; $display("  TEST 5, part 1:  Send CMD, 48-Bit Response, No error check  ");
+    `TIME; $display("  TEST 5, part 1:  Send CMD, 48-Bit Response, No error check   ");
       wbm_init_waits = 0;
       wbm_subseq_waits = {$random} % 5;
      data = 0;
@@ -2396,7 +2398,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -2459,7 +2461,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data == 0) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
           
@@ -2467,31 +2469,21 @@ begin
              wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
          
             `TIME;
-             $display("Bus error catched, Error status reg: %h", tmp_data);
-         
+             $display("Bus error succesfully catched, Error status register: %h", tmp_data);
+             tmp_data[0]=1; 
         end
        
       end   
-         
-         addr = `SD_BASE + `normal_isr   ; 
-        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       if (tmp_data[15]) begin
-               
-         `TIME;
-        $display("Normal status register is  0x1: %h, bus error succesfully captured", tmp_data);   
-       end      
-       else begin
-          test_fail_num("Bus error wasent captured, Normal status register is: %h",tmp_data);
-         `TIME;
-          $display("Bus error wasent captured, Normal status register is : %h",tmp_data);
-        fail = fail + 1; 
-       end
+
+     
        
        
                  
    
      
     end
+
+
      if (test_num == 3) //
     begin
      test_name   = " Test 5 part 4:   Send CMD2, 136-Bit    ";
@@ -2530,7 +2522,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -2666,7 +2658,7 @@ begin
        addr = `SD_BASE + `normal_isr   ; 
        data = 0; //CMD index 0, Erro check =0, rsp = 0;
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1)
+       while (tmp_data[0]!= 1)
          wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
       
       //When send finnish check if any error
@@ -2729,7 +2721,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -2792,7 +2784,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;
@@ -2855,7 +2847,7 @@ begin
       //wait for response or timeout
        addr = `SD_BASE + `normal_isr   ; 
        wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
-       while (tmp_data != 1) begin
+       while (tmp_data[0]!= 1) begin
           wbm_read(addr, tmp_data, sel, 1, wbm_init_waits, wbm_subseq_waits);
           if (tmp_data[15]== 1) begin
             fail = fail + 1;

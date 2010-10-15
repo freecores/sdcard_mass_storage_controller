@@ -330,7 +330,7 @@ else
   CardStatus[8]<=1;
      
  startUppCnt<=startUppCnt+1;
- OCR[31]<=Busy;
+ OCR[31]<=~Busy;
  if (startUppCnt == `TIME_BUSY)
    Busy <=1;   
 end
@@ -898,7 +898,7 @@ integer sdModel_file_desc;
 
 initial
 begin
-  sdModel_file_desc = $fopen("../out/sd_model.log");
+  sdModel_file_desc = $fopen("../log/sd_model.log");
   if (sdModel_file_desc < 2)
   begin
     $display("*E Could not open/create testbench log file in /log/ directory!");

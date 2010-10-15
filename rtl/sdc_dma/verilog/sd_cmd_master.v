@@ -28,7 +28,7 @@ output reg ack_out,
 input req_in,
 input ack_in,
 input [39:0] cmd_in,
-input [15:0] serial_status,
+input [7:0] serial_status,
 input card_detect
 );
  
@@ -102,7 +102,7 @@ end
 
 //---------------Input ports---------------
 
-/*
+
 always @ (posedge CLK_PAD_IO or posedge RST_PAD_I   )
 begin
   if (RST_PAD_I) begin
@@ -123,7 +123,7 @@ else begin
 	   card_present<=1'b0;
 end
 end  
-*/
+
 
 
 always @ (posedge CLK_PAD_IO or posedge RST_PAD_I   )

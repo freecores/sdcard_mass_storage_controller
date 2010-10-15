@@ -3,8 +3,8 @@
 `define BIG_ENDIAN
 //`define LITLE_ENDIAN
 
-//`define SIM
-`define SYN
+`define SIM
+//`define SYN
 
 `define SDC_IRQ_ENABLE
 

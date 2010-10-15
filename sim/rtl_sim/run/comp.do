@@ -2,7 +2,8 @@
 --Tested on Modelsim 6.5b Revison 2009.05
 puts {
   ModelSimSE SD_HOST_CONTROLLER compile script version 1.1
-  Copyright (c) Doulos June 2004, SD
+  Copyright (c) Doulos June 2004,
+  Modifed 2010, Adam Edvardsson, ORSoC
 }
 
 # Simply change the project settings in this section
@@ -11,48 +12,48 @@ puts {
 
 set library_file_list {
                            design_library {
-											../../../rtl/sdc_dma/verilog/SD_defines.v
-											../../../rtl/sdc_dma/verilog/SD_Bd.v
-											../../../rtl/sdc_dma/verilog/SD_clock_divider.v
-											../../../rtl/sdc_dma/verilog/SD_cmd_master.v
-											../../../rtl/sdc_dma/verilog/SD_cmd_serial_host.v
-											../../../rtl/sdc_dma/verilog/SD_controller_top.v
-											../../../rtl/sdc_dma/verilog/SD_controller_wb.v
-											../../../rtl/sdc_dma/verilog/SD_crc_7.v
-											../../../rtl/sdc_dma/verilog/SD_crc_16.v
-											../../../rtl/sdc_dma/verilog/SD_data_host.v
-											../../../rtl/sdc_dma/verilog/SD_data_master.v
-											../../../rtl/sdc_dma/verilog/SD_FIFO_RX_Filler.v
-											../../../rtl/sdc_dma/verilog/SD_FIFO_TX_Filler.v
+											../../../rtl/sdc_dma/verilog/sd_defines.v
+											../../../rtl/sdc_dma/verilog/sd_bd.v
+											../../../rtl/sdc_dma/verilog/sd_clock_divider.v
+											../../../rtl/sdc_dma/verilog/sd_cmd_master.v
+											../../../rtl/sdc_dma/verilog/sd_cmd_serial_host.v
+											../../../rtl/sdc_dma/verilog/sdc_controller.v
+											../../../rtl/sdc_dma/verilog/sd_controller_wb.v
+											../../../rtl/sdc_dma/verilog/sd_crc_7.v
+											../../../rtl/sdc_dma/verilog/sd_crc_16.v
+											../../../rtl/sdc_dma/verilog/sd_data_serial_host.v
+											../../../rtl/sdc_dma/verilog/sd_data_master.v
+											../../../rtl/sdc_dma/verilog/sd_fifo_rx_filler.v
+											../../../rtl/sdc_dma/verilog/sd_fifo_tx_filler.v
 										
 										}
 										
                            test_library   {	../../../bench/sdc_dma/verilog/wb_model_defines.v
-											../../../bench/sdc_dma/verilog/SD_controller_top_tb.v
-																						../../../bench/sdc_dma/verilog/sdModel.v                                           
+											../../../bench/sdc_dma/verilog/sd_controller_top_tb.v
+											../../../bench/sdc_dma/verilog/sdModel.v                                           
 											../../../bench/sdc_dma/verilog/timescale.v
 											../../../bench/sdc_dma/verilog/wb_bus_mon.v
 											../../../bench/sdc_dma/verilog/wb_master32.v
 											../../../bench/sdc_dma/verilog/wb_master_behavioral.v											
 											../../../bench/sdc_dma/verilog/wb_slave_behavioral.v
-											../../../rtl/sdc_dma/verilog/SD_defines.v
-											../../../rtl/sdc_dma/verilog/SD_Bd.v
-											../../../rtl/sdc_dma/verilog/SD_clock_divider.v
-											../../../rtl/sdc_dma/verilog/SD_cmd_master.v
-											../../../rtl/sdc_dma/verilog/SD_cmd_serial_host.v
-											../../../rtl/sdc_dma/verilog/SD_controller_top.v
-											../../../rtl/sdc_dma/verilog/SD_controller_wb.v
-											../../../rtl/sdc_dma/verilog/SD_crc_7.v
-											../../../rtl/sdc_dma/verilog/SD_crc_16.v
-											../../../rtl/sdc_dma/verilog/SD_data_host.v
-											../../../rtl/sdc_dma/verilog/SD_data_master.v
-											../../../rtl/sdc_dma/verilog/SD_FIFO_RX_Filler.v
-											../../../rtl/sdc_dma/verilog/SD_FIFO_TX_Filler.v
-											../../../rtl/sdc_dma/verilog/fifo/smii_rx_fifo.v
-											../../../rtl/sdc_dma/verilog/fifo/smii_tx_fifo.v
+											../../../rtl/sdc_dma/verilog/sd_defines.v
+											../../../rtl/sdc_dma/verilog/sd_bd.v
+											../../../rtl/sdc_dma/verilog/sd_clock_divider.v
+											../../../rtl/sdc_dma/verilog/sd_cmd_master.v
+											../../../rtl/sdc_dma/verilog/sd_cmd_serial_host.v
+											../../../rtl/sdc_dma/verilog/sdc_controller.v
+											../../../rtl/sdc_dma/verilog/sd_controller_wb.v
+											../../../rtl/sdc_dma/verilog/sd_crc_7.v
+											../../../rtl/sdc_dma/verilog/sd_crc_16.v
+											../../../rtl/sdc_dma/verilog/sd_data_serial_host.v
+											../../../rtl/sdc_dma/verilog/sd_data_master.v
+											../../../rtl/sdc_dma/verilog/sd_fifo_rx_filler.v
+											../../../rtl/sdc_dma/verilog/sd_fifo_tx_filler.v
+											../../../rtl/sdc_dma/verilog/sd_rx_fifo.v
+											../../../rtl/sdc_dma/verilog/sd_tx_fifo.v
 										}
 }
-set top_level              test_library.SD_controller_top_tb
+set top_level              test_library.sd_controller_top_tb
 
 
 
@@ -122,11 +123,11 @@ if [llength $wave_patterns] {
       catch {property wave -radix $radix $signal}
     }
   }
-  if $tk_ok {wm geometry .wave [winfo screenwidth .]x330+0-20}
+ # if $tk_ok {wm geometry .wave [winfo screenwidth .]x330+0-20}
 }
 
 # Run the simulation
- when {/SD_controller_top_tb/succes = 1} {stop}
+ when {/sd_controller_top_tb/succes = 1} {stop}
  run -all
  
 
